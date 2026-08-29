@@ -52,17 +52,21 @@ else:
     raise SystemExit("PostgreSQL did not become ready in time")
 PY
 
+printf '[options]\nadmin_passwd = %s\n' "$ODOO_MASTER_PASSWORD" > /tmp/odoo.conf
+chmod 600 /tmp/odoo.conf
+
 odoo \
+  --config=/tmp/odoo.conf \
   --db_host=127.0.0.1 \
   --db_port=5432 \
   --db_user="$POSTGRES_USER" \
   --db_password="$POSTGRES_PASSWORD" \
-  --admin-passwd="$ODOO_MASTER_PASSWORD" \
   --database="$POSTGRES_DB" \
   --init="$ODOO_MODULES" \
   --stop-after-init
 
 printf "env.ref('base.user_admin').write({'login': '$ODOO_ADMIN_LOGIN', 'password': '$ODOO_ADMIN_PASSWORD'})\n" | odoo shell \
+  --config=/tmp/odoo.conf \
   --db_host=127.0.0.1 \
   --db_port=5432 \
   --db_user="$POSTGRES_USER" \
@@ -77,12 +81,14 @@ var odooStartScript = '''
 set -eu
 echo "Waiting for the Odoo bootstrap container..."
 while [ ! -f /bootstrap/ready ]; do sleep 2; done
+printf '[options]\nadmin_passwd = %s\n' "$ODOO_MASTER_PASSWORD" > /tmp/odoo.conf
+chmod 600 /tmp/odoo.conf
 exec odoo \
+  --config=/tmp/odoo.conf \
   --db_host=127.0.0.1 \
   --db_port=5432 \
   --db_user="$POSTGRES_USER" \
   --db_password="$POSTGRES_PASSWORD" \
-  --admin-passwd="$ODOO_MASTER_PASSWORD" \
   --database="$POSTGRES_DB" \
   --db-filter="^$POSTGRES_DB$" \
   --proxy-mode
