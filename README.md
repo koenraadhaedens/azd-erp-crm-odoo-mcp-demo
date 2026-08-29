@@ -21,7 +21,7 @@ The repository includes build contexts for all four images:
 | `odoo:<tag>` | `src/odoo`, based on Odoo 18. |
 | `postgres:<tag>` | `src/postgres`, based on PostgreSQL 16 Bookworm. |
 | `odoo-mcp:<tag>` | `src/odoo-mcp`, the authenticated Python MCP server. |
-| `caddy:<tag>` | `src/caddy`, the HTTPS reverse proxy and routing configuration. |
+| `caddy-odoo:<tag>` | `src/caddy`, the project-specific HTTPS reverse proxy and routing configuration. |
 
 By default, `azd up` builds all four images remotely in `acrdefcontainer.azurecr.io` from this repository before provisioning ACI:
 
@@ -29,7 +29,7 @@ By default, `azd up` builds all four images remotely in `acrdefcontainer.azurecr
 azd up
 ```
 
-Remote ACR builds do not require local Docker. They require Azure CLI authentication and permission to queue builds in `acrdefcontainer`. The build is tagged with the current Git commit and reused until `IMAGE_TAG` changes. Set a new tag explicitly when rebuilding unchanged committed source:
+Remote ACR builds do not require local Docker. They require Azure CLI authentication and permission to queue builds in `acrdefcontainer`. Anonymous pull access is enabled on this registry, so ACI does not require registry credentials. The build is tagged with the current Git commit and reused until `IMAGE_TAG` changes. Set a new tag explicitly when rebuilding unchanged committed source:
 
 ```text
 azd env set IMAGE_TAG workshop-v2
@@ -38,16 +38,13 @@ azd up
 
 To use images that already exist in the registry instead, set `BUILD_IMAGES=false` and configure `ODOO_IMAGE`, `POSTGRES_IMAGE`, `MCP_IMAGE`, and `CADDY_IMAGE` in the selected `azd` environment.
 
-ACI uses one prompted ACR username and password/token for all four images. Prefer a read-only, repository-scoped ACR token rather than an administrator credential.
-
 ## Deploy
 
 Prerequisites:
 
 1. Azure Developer CLI (`azd`).
 2. Access to an Azure subscription with permission to create a resource group and ACI container group.
-3. Pull credentials for `acrdefcontainer.azurecr.io`.
-4. Azure CLI (`az`) only when `BUILD_IMAGES=true`.
+3. Azure CLI (`az`) only when `BUILD_IMAGES=true`.
 
 Run:
 
@@ -56,7 +53,7 @@ azd auth login
 azd up
 ```
 
-Select the subscription and region and enter the ACR pull password when prompted. Application credentials are generated during deployment and printed by the post-provision hook. They are also available in the local `azd` environment.
+Select the subscription and region. Application credentials are generated during deployment and printed by the post-provision hook. They are also available in the local `azd` environment.
 
 To reset an existing environment with a new empty database and new credentials:
 

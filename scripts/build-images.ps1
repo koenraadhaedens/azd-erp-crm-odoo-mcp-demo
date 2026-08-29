@@ -16,7 +16,7 @@ $builds = @(
     @{ Image = "odoo:$Tag"; Context = 'src/odoo'; Dockerfile = 'src/odoo/Dockerfile' },
     @{ Image = "postgres:$Tag"; Context = 'src/postgres'; Dockerfile = 'src/postgres/Dockerfile' },
     @{ Image = "odoo-mcp:$Tag"; Context = 'src/odoo-mcp'; Dockerfile = 'src/odoo-mcp/Dockerfile' },
-    @{ Image = "caddy:$Tag"; Context = 'src/caddy'; Dockerfile = 'src/caddy/Dockerfile' }
+    @{ Image = "caddy-odoo:$Tag"; Context = 'src/caddy'; Dockerfile = 'src/caddy/Dockerfile' }
 )
 
 Push-Location $root

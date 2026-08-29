@@ -8,12 +8,6 @@
     "location": {
       "value": "${AZURE_LOCATION}"
     },
-    "containerRegistryUsername": {
-      "value": "${ACR_USERNAME}"
-    },
-    "containerRegistryPassword": {
-      "value": "${ACR_PASSWORD}"
-    },
     "odooImage": {
       "value": "${ODOO_IMAGE}"
     },

@@ -8,13 +8,6 @@ param environmentName string
 @description('Azure region for the resource group and ACI container group.')
 param location string
 
-@description('Login name used by ACI to pull images from the external registry.')
-param containerRegistryUsername string = 'acrdefcontainer'
-
-@secure()
-@description('Password or token used by ACI to pull images from acrdefcontainer.azurecr.io. azd prompts for it.')
-param containerRegistryPassword string
-
 @description('Odoo image mirrored in the external registry.')
 param odooImage string = 'acrdefcontainer.azurecr.io/odoo:18.0'
 
@@ -25,7 +18,7 @@ param postgresImage string = 'acrdefcontainer.azurecr.io/postgres:16'
 param mcpImage string = 'acrdefcontainer.azurecr.io/odoo-mcp:latest'
 
 @description('Caddy HTTPS reverse-proxy image in the external registry.')
-param caddyImage string = 'acrdefcontainer.azurecr.io/caddy:latest'
+param caddyImage string = 'acrdefcontainer.azurecr.io/caddy-odoo:latest'
 
 @description('Comma-separated Odoo modules installed by the bootstrap container.')
 param odooModules string = 'base,crm,sale_management,purchase,stock,account'
@@ -70,8 +63,6 @@ module containerGroup 'modules/container-group.bicep' = {
     environmentName: environmentName
     location: location
     tags: tags
-    containerRegistryUsername: containerRegistryUsername
-    containerRegistryPassword: containerRegistryPassword
     odooImage: odooImage
     postgresImage: postgresImage
     mcpImage: mcpImage

@@ -35,4 +35,4 @@ build_image() {
 build_image "odoo:$TAG" "src/odoo/Dockerfile" "src/odoo"
 build_image "postgres:$TAG" "src/postgres/Dockerfile" "src/postgres"
 build_image "odoo-mcp:$TAG" "src/odoo-mcp/Dockerfile" "src/odoo-mcp"
-build_image "caddy:$TAG" "src/caddy/Dockerfile" "src/caddy"
+build_image "caddy-odoo:$TAG" "src/caddy/Dockerfile" "src/caddy"

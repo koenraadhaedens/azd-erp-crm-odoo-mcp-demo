@@ -7,13 +7,6 @@ param location string
 @description('Tags applied to the container group.')
 param tags object
 
-@description('External ACR pull username.')
-param containerRegistryUsername string
-
-@secure()
-@description('External ACR pull password or token.')
-param containerRegistryPassword string
-
 param odooImage string
 param postgresImage string
 param mcpImage string
@@ -33,7 +26,6 @@ param odooAdminPassword string
 @secure()
 param mcpApiKey string
 
-var registryServer = 'acrdefcontainer.azurecr.io'
 var postgresDatabase = 'odoo_demo'
 var postgresUser = 'odoo'
 var odooAdminLogin = 'admin'
@@ -105,13 +97,6 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2026-07-01'
   properties: {
     osType: 'Linux'
     restartPolicy: 'OnFailure'
-    imageRegistryCredentials: [
-      {
-        server: registryServer
-        username: containerRegistryUsername
-        password: containerRegistryPassword
-      }
-    ]
     ipAddress: {
       type: 'Public'
       dnsNameLabel: dnsNameLabel

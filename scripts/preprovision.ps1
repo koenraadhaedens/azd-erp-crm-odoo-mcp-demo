@@ -28,16 +28,17 @@ if ($buildImages -ieq 'true') {
         }
         azd env set IMAGE_TAG $imageTag
     }
+    $imageBuildKey = "${imageTag}-caddy-odoo-v1"
     $lastBuiltTag = Get-AzdValue 'LAST_BUILT_IMAGE_TAG'
-    if ($lastBuiltTag -ne $imageTag) {
+    if ($lastBuiltTag -ne $imageBuildKey) {
         & "$PSScriptRoot/build-images.ps1" -Registry $registryName -Tag $imageTag
         if ($LASTEXITCODE -ne 0) { throw 'One or more ACR image builds failed.' }
-        azd env set LAST_BUILT_IMAGE_TAG $imageTag
+        azd env set LAST_BUILT_IMAGE_TAG $imageBuildKey
     }
     azd env set ODOO_IMAGE "$registryServer/odoo:$imageTag"
     azd env set POSTGRES_IMAGE "$registryServer/postgres:$imageTag"
     azd env set MCP_IMAGE "$registryServer/odoo-mcp:$imageTag"
-    azd env set CADDY_IMAGE "$registryServer/caddy:$imageTag"
+    azd env set CADDY_IMAGE "$registryServer/caddy-odoo:$imageTag"
 }
 else {
     if ([string]::IsNullOrWhiteSpace((Get-AzdValue 'ODOO_IMAGE'))) {
@@ -50,43 +51,6 @@ else {
         azd env set MCP_IMAGE "$registryServer/odoo-mcp:latest"
     }
     if ([string]::IsNullOrWhiteSpace((Get-AzdValue 'CADDY_IMAGE'))) {
-        azd env set CADDY_IMAGE "$registryServer/caddy:latest"
+        azd env set CADDY_IMAGE "$registryServer/caddy-odoo:latest"
     }
-}
-
-$existingUsername = azd env get-value ACR_USERNAME 2>$null
-if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($existingUsername)) {
-    $enteredUsername = Read-Host 'ACR pull username [acrdefcontainer]'
-    if ([string]::IsNullOrWhiteSpace($enteredUsername)) {
-        $enteredUsername = 'acrdefcontainer'
-    }
-    azd env set ACR_USERNAME $enteredUsername
-    if ($LASTEXITCODE -ne 0) {
-        throw 'Unable to save ACR_USERNAME in the selected azd environment.'
-    }
-}
-
-$existingPassword = azd env get-value ACR_PASSWORD 2>$null
-if ($LASTEXITCODE -eq 0 -and -not [string]::IsNullOrWhiteSpace($existingPassword)) {
-    exit 0
-}
-
-Write-Host 'A pull password or repository-scoped token is required for acrdefcontainer.azurecr.io.' -ForegroundColor Cyan
-$securePassword = Read-Host 'ACR pull password/token' -AsSecureString
-$passwordPointer = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($securePassword)
-try {
-    $plainPassword = [Runtime.InteropServices.Marshal]::PtrToStringBSTR($passwordPointer)
-    if ([string]::IsNullOrWhiteSpace($plainPassword)) {
-        throw 'The ACR pull password/token cannot be empty.'
-    }
-    azd env set ACR_PASSWORD $plainPassword
-    if ($LASTEXITCODE -ne 0) {
-        throw 'Unable to save ACR_PASSWORD in the selected azd environment.'
-    }
-}
-finally {
-    if ($passwordPointer -ne [IntPtr]::Zero) {
-        [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($passwordPointer)
-    }
-    $plainPassword = $null
 }
