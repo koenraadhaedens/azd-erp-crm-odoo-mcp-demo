@@ -84,15 +84,3 @@ output ODOO_URL string = containerGroup.outputs.odooUrl
 output MCP_URL string = containerGroup.outputs.mcpUrl
 output ODOO_DATABASE string = containerGroup.outputs.odooDatabase
 output ODOO_ADMIN_LOGIN string = containerGroup.outputs.odooAdminLogin
-
-@secure()
-output POSTGRES_PASSWORD string = postgresPassword
-
-@secure()
-output ODOO_MASTER_PASSWORD string = odooMasterPassword
-
-@secure()
-output ODOO_ADMIN_PASSWORD string = odooAdminPassword
-
-@secure()
-output MCP_API_KEY string = mcpApiKey
