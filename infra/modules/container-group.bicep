@@ -88,7 +88,7 @@ exec odoo \
   --proxy-mode
 '''
 
-resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2026-07-01' = {
+resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2025-09-01' = {
   name: 'aci-${environmentName}'
   location: location
   tags: union(tags, {
