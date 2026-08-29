@@ -77,6 +77,8 @@ To review changes before deploying, use `azd provision --preview`.
 
 Only Caddy ports 80 and 443 are public. PostgreSQL, Odoo, and MCP have no public ACI port mappings.
 
+The Odoo image starts through a root wrapper only long enough to set ownership on ACI's root-owned readiness volume, then immediately drops to the stock non-root `odoo` account before running bootstrap or the web server.
+
 ## HTTPS endpoints
 
 The deployment uses the generated Azure Container Instances hostname directly; no custom domain is required. It returns these endpoints on one `*.azurecontainer.io` FQDN:
