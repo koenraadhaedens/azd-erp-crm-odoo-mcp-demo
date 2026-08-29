@@ -54,7 +54,9 @@ azd auth login
 azd up
 ```
 
-Select the subscription and region. A first provisioning layer generates application credentials and saves them in the local `azd` environment. The application layer then receives them as secure Bicep parameters, and the post-provision delivery summary prints them. The layer boundary ensures `azd` reloads values written by the credential hook before provisioning the application. The summary also runs after `azd deploy`.
+Select the subscription and region. A first provisioning layer generates disposable application credentials as deployment outputs. `azd` propagates them to the dependent application layer as secure Bicep parameters and saves them in the local environment so the post-provision delivery summary can print them. The summary also runs after `azd deploy`.
+
+The credential outputs are intentionally not marked secure because Azure Developer CLI does not persist secure outputs. Consequently, these demo credentials are visible in deployment outputs and local `azd` state. This tradeoff is suitable only for this disposable workshop sandbox; production deployments must use Key Vault or managed identity and must not print credentials.
 
 To reset an existing environment with a new empty database and new credentials:
 
