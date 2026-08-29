@@ -1,0 +1,40 @@
+[build-system]
+requires = ["hatchling==1.27.0"]
+build-backend = "hatchling.build"
+
+[project]
+name = "odoo-mcp-demo"
+version = "0.1.0"
+description = "Authenticated MCP tools for the disposable Odoo ERP/CRM demo"
+requires-python = ">=3.12"
+dependencies = [
+  "httpx==0.28.1",
+  "mcp==2.1.1",
+  "uvicorn==0.52.4",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest==8.4.2",
+  "pytest-asyncio==1.4.0",
+  "respx==0.23.1",
+  "ruff==0.16.5",
+]
+
+[project.scripts]
+odoo-mcp = "odoo_mcp.server:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/odoo_mcp"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+src = ["src"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]

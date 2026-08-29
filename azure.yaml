@@ -1,0 +1,33 @@
+name: azd-erp-crm-odoo-mcp-demo
+metadata:
+  template: azd-erp-crm-odoo-mcp-demo@0.1.0
+
+infra:
+  provider: bicep
+  path: infra
+  module: main
+
+# ACI is provisioned entirely through IaC. The predeploy hook makes `azd deploy`
+# an intentional sandbox reset while `azd up` remains the one-command first run.
+hooks:
+  preprovision:
+    windows:
+      shell: pwsh
+      run: ./scripts/preprovision.ps1
+    posix:
+      shell: sh
+      run: sh ./scripts/preprovision.sh
+  predeploy:
+    windows:
+      shell: pwsh
+      run: azd provision
+    posix:
+      shell: sh
+      run: azd provision
+  postprovision:
+    windows:
+      shell: pwsh
+      run: ./scripts/postdelivery.ps1
+    posix:
+      shell: sh
+      run: sh ./scripts/postdelivery.sh

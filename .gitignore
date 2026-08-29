@@ -1,0 +1,12 @@
+# Azure Developer CLI environment state and secrets
+.azure/*
+!.azure/plan.copilotmd
+!.azure/summary.copilotmd
+
+# Local tooling
+.DS_Store
+.vscode/
+.venv/
+**/__pycache__/
+**/.pytest_cache/
+**/.ruff_cache/

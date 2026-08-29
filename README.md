@@ -1,0 +1,105 @@
+# Disposable Odoo ERP/CRM MCP demo on Azure Container Instances
+
+This repository deploys a reproducible Odoo demonstration sandbox into one Azure Container Instances (ACI) container group. PostgreSQL, an Odoo bootstrap process, Odoo, the MCP server, and Caddy share the group's loopback network while remaining separate containers.
+
+## What gets deployed
+
+- PostgreSQL 16 with ephemeral `emptyDir` storage.
+- An Odoo 18 bootstrap container that creates a fresh database, loads demo data, installs CRM/ERP modules, and changes the Odoo administrator password.
+- Odoo 18, listening internally on TCP 8069.
+- The Odoo MCP server, listening internally on TCP 8000 by default and configured for Odoo JSON-RPC over `http://127.0.0.1:8069`.
+- Caddy as the only public ingress on TCP 80 and 443, with automatic HTTPS for the generated ACI FQDN.
+
+Every reprovision replaces the sandbox and its generated credentials. This is intentional and makes the project suitable for workshops and isolated demos; it is not a production architecture.
+
+## Included container sources
+
+The repository includes build contexts for all four images:
+
+| Repository/tag | Source |
+| --- | --- |
+| `odoo:<tag>` | `src/odoo`, based on Odoo 18. |
+| `postgres:<tag>` | `src/postgres`, based on PostgreSQL 16 Bookworm. |
+| `odoo-mcp:<tag>` | `src/odoo-mcp`, the authenticated Python MCP server. |
+| `caddy:<tag>` | `src/caddy`, the HTTPS reverse proxy and routing configuration. |
+
+By default, `azd up` builds all four images remotely in `acrdefcontainer.azurecr.io` from this repository before provisioning ACI:
+
+```text
+azd up
+```
+
+Remote ACR builds do not require local Docker. They require Azure CLI authentication and permission to queue builds in `acrdefcontainer`. The build is tagged with the current Git commit and reused until `IMAGE_TAG` changes. Set a new tag explicitly when rebuilding unchanged committed source:
+
+```text
+azd env set IMAGE_TAG workshop-v2
+azd up
+```
+
+To use images that already exist in the registry instead, set `BUILD_IMAGES=false` and configure `ODOO_IMAGE`, `POSTGRES_IMAGE`, `MCP_IMAGE`, and `CADDY_IMAGE` in the selected `azd` environment.
+
+ACI uses one prompted ACR username and password/token for all four images. Prefer a read-only, repository-scoped ACR token rather than an administrator credential.
+
+## Deploy
+
+Prerequisites:
+
+1. Azure Developer CLI (`azd`).
+2. Access to an Azure subscription with permission to create a resource group and ACI container group.
+3. Pull credentials for `acrdefcontainer.azurecr.io`.
+4. Azure CLI (`az`) only when `BUILD_IMAGES=true`.
+
+Run:
+
+```text
+azd auth login
+azd up
+```
+
+Select the subscription and region and enter the ACR pull password when prompted. Application credentials are generated during deployment and printed by the post-provision hook. They are also available in the local `azd` environment.
+
+To reset an existing environment with a new empty database and new credentials:
+
+```text
+azd deploy
+```
+
+Because ACI is an infrastructure resource rather than an `azd` application host, the `predeploy` hook runs `azd provision`; the subsequent deploy phase has no source artifact to upload. `azd up` can therefore perform one additional idempotent provision pass.
+
+To review changes before deploying, use `azd provision --preview`.
+
+## Initialization flow
+
+1. PostgreSQL starts and initializes an empty data directory.
+2. `odoo-bootstrap` waits for TCP 5432, creates `odoo_demo`, installs the configured modules with Odoo demo data enabled, and rotates the admin password.
+3. The bootstrap writes a readiness marker to a shared ephemeral volume.
+4. The Odoo web container sees the marker and starts against the initialized database.
+5. The MCP server connects to Odoo through the container group's loopback network.
+6. Caddy obtains a public certificate and routes HTTPS traffic to the internal application listeners.
+
+Only Caddy ports 80 and 443 are public. PostgreSQL, Odoo, and MCP have no public ACI port mappings.
+
+## HTTPS endpoints
+
+The deployment uses the generated Azure Container Instances hostname directly; no custom domain is required. It returns these endpoints on one `*.azurecontainer.io` FQDN:
+
+- `ODOO_URL`: `https://<fqdn>`
+- `MCP_URL`: `https://<fqdn>/mcp`
+
+Caddy routes `/mcp` and `/mcp/*` to MCP without stripping the path. All other paths go to Odoo. Incoming authorization headers are preserved, and Caddy supplies the forwarding headers consumed by Odoo's proxy mode. Port 80 remains open for ACME HTTP validation and redirects normal HTTP requests to HTTPS.
+
+Initial certificate issuance happens asynchronously and can take a short time after ACI starts. Caddy validates the generated ACI hostname over ports 80/443 and obtains a publicly trusted certificate for that exact hostname. Caddy stores certificates under `/data` in a writable group volume, which survives individual container restarts but is deleted with this disposable container group. Repeatedly replacing the group can trigger public certificate-authority rate limits.
+
+## MCP server
+
+The HTTPS Streamable HTTP endpoint is returned as `MCP_URL` and ends in `/mcp`. Clients must send the generated key as an HTTP bearer token:
+
+```text
+Authorization: Bearer <MCP_API_KEY>
+```
+
+The server provides bounded tools for health, contact search/creation, CRM lead search/creation, product search, and sales-order listing. It intentionally does not expose arbitrary Odoo models, methods, domains, or fields. See `src/odoo-mcp/README.md` for its environment contract and tool list.
+
+## Important security note
+
+The post-delivery scripts intentionally display generated credentials because this repository is a disposable demo. Avoid CI log retention, screen sharing, or reuse of these values. For production, remove credential printing, use managed identity/Key Vault, use a managed TLS ingress, and use persistent managed database/storage services.

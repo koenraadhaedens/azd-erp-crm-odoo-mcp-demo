@@ -1,0 +1,18 @@
+{
+	admin off
+}
+
+{$PUBLIC_FQDN} {
+	encode zstd gzip
+
+	@mcp path /mcp /mcp/*
+	handle @mcp {
+		reverse_proxy 127.0.0.1:8000 {
+			flush_interval -1
+		}
+	}
+
+	handle {
+		reverse_proxy 127.0.0.1:8069
+	}
+}
