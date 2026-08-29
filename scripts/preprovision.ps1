@@ -28,7 +28,7 @@ if ($buildImages -ieq 'true') {
         }
         azd env set IMAGE_TAG $imageTag
     }
-    $imageBuildKey = "${imageTag}-odoo-volume-v2"
+    $imageBuildKey = "${imageTag}-odoo-volume-v3"
     $lastBuiltTag = Get-AzdValue 'LAST_BUILT_IMAGE_TAG'
     if ($lastBuiltTag -ne $imageBuildKey) {
         & "$PSScriptRoot/build-images.ps1" -Registry $registryName -Tag $imageTag
