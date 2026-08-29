@@ -29,6 +29,7 @@ By default, `azd up` builds all four images remotely in `acrdefcontainer.azurecr
 azd up
 ```
 
+Each build also updates the stable tag used by the Bicep default: `odoo:18.0`, `postgres:16`, `odoo-mcp:latest`, or `caddy-odoo:latest`. Immutable revision tags remain the values used by the normal `azd up` workflow.
 Remote ACR builds do not require local Docker. They require Azure CLI authentication and permission to queue builds in `acrdefcontainer`. Anonymous pull access is enabled on this registry, so ACI does not require registry credentials. The build is tagged with the current Git commit and reused until `IMAGE_TAG` changes. Set a new tag explicitly when rebuilding unchanged committed source:
 
 ```text

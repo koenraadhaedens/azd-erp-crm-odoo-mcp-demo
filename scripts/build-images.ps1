@@ -13,10 +13,10 @@ if (-not (Get-Command az -ErrorAction SilentlyContinue)) {
 }
 
 $builds = @(
-    @{ Image = "odoo:$Tag"; Context = 'src/odoo'; Dockerfile = 'src/odoo/Dockerfile' },
-    @{ Image = "postgres:$Tag"; Context = 'src/postgres'; Dockerfile = 'src/postgres/Dockerfile' },
-    @{ Image = "odoo-mcp:$Tag"; Context = 'src/odoo-mcp'; Dockerfile = 'src/odoo-mcp/Dockerfile' },
-    @{ Image = "caddy-odoo:$Tag"; Context = 'src/caddy'; Dockerfile = 'src/caddy/Dockerfile' }
+    @{ Image = "odoo:$Tag"; Alias = 'odoo:18.0'; Context = 'src/odoo'; Dockerfile = 'src/odoo/Dockerfile' },
+    @{ Image = "postgres:$Tag"; Alias = 'postgres:16'; Context = 'src/postgres'; Dockerfile = 'src/postgres/Dockerfile' },
+    @{ Image = "odoo-mcp:$Tag"; Alias = 'odoo-mcp:latest'; Context = 'src/odoo-mcp'; Dockerfile = 'src/odoo-mcp/Dockerfile' },
+    @{ Image = "caddy-odoo:$Tag"; Alias = 'caddy-odoo:latest'; Context = 'src/caddy'; Dockerfile = 'src/caddy/Dockerfile' }
 )
 
 Push-Location $root
@@ -26,6 +26,7 @@ try {
         az acr build `
             --registry $Registry `
             --image $build.Image `
+            --image $build.Alias `
             --file $build.Dockerfile `
             $build.Context `
             --output none `

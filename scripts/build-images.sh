@@ -20,19 +20,21 @@ cd "$ROOT"
 
 build_image() {
   image="$1"
-  dockerfile="$2"
-  context="$3"
+  alias="$2"
+  dockerfile="$3"
+  context="$4"
   printf 'Building %s in %s...\n' "$image" "$REGISTRY"
   az acr build \
     --registry "$REGISTRY" \
     --image "$image" \
+    --image "$alias" \
     --file "$dockerfile" \
     "$context" \
     --output none \
     --only-show-errors
 }
 
-build_image "odoo:$TAG" "src/odoo/Dockerfile" "src/odoo"
-build_image "postgres:$TAG" "src/postgres/Dockerfile" "src/postgres"
-build_image "odoo-mcp:$TAG" "src/odoo-mcp/Dockerfile" "src/odoo-mcp"
-build_image "caddy-odoo:$TAG" "src/caddy/Dockerfile" "src/caddy"
+build_image "odoo:$TAG" "odoo:18.0" "src/odoo/Dockerfile" "src/odoo"
+build_image "postgres:$TAG" "postgres:16" "src/postgres/Dockerfile" "src/postgres"
+build_image "odoo-mcp:$TAG" "odoo-mcp:latest" "src/odoo-mcp/Dockerfile" "src/odoo-mcp"
+build_image "caddy-odoo:$TAG" "caddy-odoo:latest" "src/caddy/Dockerfile" "src/caddy"
