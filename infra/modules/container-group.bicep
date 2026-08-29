@@ -177,7 +177,6 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2025-09-01'
         properties: {
           image: odooImage
           command: [
-            '/usr/local/bin/run-with-bootstrap-volume'
             '/bin/bash'
             '-c'
             bootstrapScript
@@ -231,7 +230,6 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2025-09-01'
         properties: {
           image: odooImage
           command: [
-            '/usr/local/bin/run-with-bootstrap-volume'
             '/bin/bash'
             '-c'
             odooStartScript
