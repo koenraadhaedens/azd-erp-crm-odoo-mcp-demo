@@ -11,23 +11,23 @@ infra:
 # the sandbox; post hooks print its endpoints and disposable demo credentials.
 hooks:
   preprovision:
-    windows:
-      shell: pwsh
-      run: ./scripts/preprovision.ps1
-    posix:
-      shell: sh
-      run: sh ./scripts/preprovision.sh
+    - windows:
+        shell: pwsh
+        run: ./scripts/preprovision.ps1
+      posix:
+        shell: sh
+        run: sh ./scripts/preprovision.sh
   postprovision:
-    windows:
-      shell: pwsh
-      run: ./scripts/postdelivery.ps1
-    posix:
-      shell: sh
-      run: sh ./scripts/postdelivery.sh
+    - windows:
+        shell: pwsh
+        run: ./scripts/postdelivery.ps1
+      posix:
+        shell: sh
+        run: sh ./scripts/postdelivery.sh
   postdeploy:
-    windows:
-      shell: pwsh
-      run: ./scripts/postdelivery.ps1
-    posix:
-      shell: sh
-      run: sh ./scripts/postdelivery.sh
+    - windows:
+        shell: pwsh
+        run: ./scripts/postdelivery.ps1
+      posix:
+        shell: sh
+        run: sh ./scripts/postdelivery.sh
