@@ -5,6 +5,24 @@ get_azd_value() {
   azd env get-value "$1" 2>/dev/null || true
 }
 
+set_generated_azd_secret() {
+  name="$1"
+  prefix="$2"
+  if [ -z "$(get_azd_value "$name")" ]; then
+    if command -v uuidgen >/dev/null 2>&1; then
+      random_value="$(uuidgen | tr -d '-' | tr '[:upper:]' '[:lower:]')"
+    else
+      random_value="$(od -An -N16 -tx1 /dev/urandom | tr -d ' \n')"
+    fi
+    azd env set "$name" "${prefix}-${random_value}!"
+  fi
+}
+
+set_generated_azd_secret POSTGRES_PASSWORD Pg
+set_generated_azd_secret ODOO_MASTER_PASSWORD Master
+set_generated_azd_secret ODOO_ADMIN_PASSWORD Admin
+set_generated_azd_secret MCP_API_KEY Mcp
+
 ACR_NAME_VALUE="$(get_azd_value ACR_NAME)"
 ACR_NAME_VALUE="${ACR_NAME_VALUE:-acrdefcontainer}"
 azd env set ACR_NAME "$ACR_NAME_VALUE"

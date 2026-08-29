@@ -19,6 +19,18 @@
     },
     "caddyImage": {
       "value": "${CADDY_IMAGE}"
+    },
+    "postgresPassword": {
+      "value": "${POSTGRES_PASSWORD}"
+    },
+    "odooMasterPassword": {
+      "value": "${ODOO_MASTER_PASSWORD}"
+    },
+    "odooAdminPassword": {
+      "value": "${ODOO_ADMIN_PASSWORD}"
+    },
+    "mcpApiKey": {
+      "value": "${MCP_API_KEY}"
     }
   }
 }

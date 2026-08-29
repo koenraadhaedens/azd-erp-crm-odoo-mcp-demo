@@ -54,7 +54,7 @@ azd auth login
 azd up
 ```
 
-Select the subscription and region. Application credentials are generated during deployment and printed by the post-provision hook. They are also available in the local `azd` environment.
+Select the subscription and region. Application credentials are generated and saved in the local `azd` environment before provisioning, passed to Bicep as secure parameters, and printed by the post-provision delivery summary. The summary also runs after `azd deploy`.
 
 To reset an existing environment with a new empty database and new credentials:
 

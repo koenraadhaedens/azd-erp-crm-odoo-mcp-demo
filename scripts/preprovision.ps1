@@ -6,6 +6,20 @@ function Get-AzdValue([string]$Name) {
     return ''
 }
 
+function Set-GeneratedAzdSecret([string]$Name, [string]$Prefix) {
+    $value = Get-AzdValue $Name
+    if ([string]::IsNullOrWhiteSpace($value)) {
+        $value = "$Prefix-$([guid]::NewGuid().ToString('N'))!"
+        azd env set $Name $value
+        if ($LASTEXITCODE -ne 0) { throw "Failed to persist $Name in the azd environment." }
+    }
+}
+
+Set-GeneratedAzdSecret 'POSTGRES_PASSWORD' 'Pg'
+Set-GeneratedAzdSecret 'ODOO_MASTER_PASSWORD' 'Master'
+Set-GeneratedAzdSecret 'ODOO_ADMIN_PASSWORD' 'Admin'
+Set-GeneratedAzdSecret 'MCP_API_KEY' 'Mcp'
+
 $registryName = Get-AzdValue 'ACR_NAME'
 if ([string]::IsNullOrWhiteSpace($registryName)) {
     $registryName = 'acrdefcontainer'
