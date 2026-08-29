@@ -54,7 +54,7 @@ azd auth login
 azd up
 ```
 
-Select the subscription and region. Application credentials are generated and saved in the local `azd` environment before provisioning, passed to Bicep as secure parameters, and printed by the post-provision delivery summary. The summary also runs after `azd deploy`.
+Select the subscription and region. A first provisioning layer generates application credentials and saves them in the local `azd` environment. The application layer then receives them as secure Bicep parameters, and the post-provision delivery summary prints them. The layer boundary ensures `azd` reloads values written by the credential hook before provisioning the application. The summary also runs after `azd deploy`.
 
 To reset an existing environment with a new empty database and new credentials:
 

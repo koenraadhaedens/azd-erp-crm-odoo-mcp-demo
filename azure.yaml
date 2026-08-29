@@ -4,21 +4,29 @@ metadata:
 
 infra:
   provider: bicep
-  path: infra
-  module: main
+  layers:
+    - name: credentials
+      path: infra/bootstrap
+      module: main
+      hooks:
+        preprovision:
+          - windows:
+              shell: pwsh
+              run: ../../scripts/preprovision.ps1
+              interactive: true
+            posix:
+              shell: sh
+              run: sh ../../scripts/preprovision.sh
+              interactive: true
+    - name: application
+      path: infra
+      module: main
+      dependsOn:
+        - credentials
 
 # ACI is provisioned entirely through IaC. `azd up` and `azd provision` create
 # the sandbox; post hooks print its endpoints and disposable demo credentials.
 hooks:
-  preprovision:
-    - windows:
-        shell: pwsh
-        run: ./scripts/preprovision.ps1
-        interactive: true
-      posix:
-        shell: sh
-        run: sh ./scripts/preprovision.sh
-        interactive: true
   postprovision:
     - windows:
         shell: pwsh
