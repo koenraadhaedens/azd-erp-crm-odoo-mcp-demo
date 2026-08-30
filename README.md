@@ -57,6 +57,8 @@ azd up
 
 Select the subscription and region. A first provisioning layer generates disposable application credentials as deployment outputs. `azd` propagates them to the dependent application layer as secure Bicep parameters and saves them in the local environment so the post-provision delivery summary can print them. The summary also runs after `azd deploy`.
 
+The delivery hook displays an animated initialization status and waits up to 20 minutes for the `odoo-bootstrap` container to finish successfully. Endpoints and credentials are printed only after the applications and realistic demo data are ready. If initialization fails or times out, the hook prints recent bootstrap logs and fails without displaying credentials.
+
 The credential outputs are intentionally not marked secure because Azure Developer CLI does not persist secure outputs. Consequently, these demo credentials are visible in deployment outputs and local `azd` state. This tradeoff is suitable only for this disposable workshop sandbox; production deployments must use Key Vault or managed identity and must not print credentials.
 
 To reset an existing environment with a new empty database and new credentials:
