@@ -15,7 +15,7 @@ $registryServer = "$registryName.azurecr.io"
 
 $buildImages = Get-AzdValue 'BUILD_IMAGES'
 if ([string]::IsNullOrWhiteSpace($buildImages)) {
-    $buildImages = 'true'
+    $buildImages = 'false'
     azd env set BUILD_IMAGES $buildImages
 }
 

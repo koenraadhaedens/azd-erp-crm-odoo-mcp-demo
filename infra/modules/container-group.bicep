@@ -31,16 +31,12 @@ var postgresUser = 'odoo'
 var odooAdminLogin = 'admin'
 var dnsNameLabel = 'odoo-${uniqueString(subscription().id, resourceGroup().id, environmentName)}'
 var containerGroupFqdn = '${dnsNameLabel}.${location}.azurecontainer.io'
+var realisticDemoSeed = loadTextContent('../../src/odoo/seed-realistic-demo.py')
 
 // The bootstrap container waits for PostgreSQL, initializes Odoo with demo data,
 // rotates the admin credential, and releases the web process through an emptyDir marker.
-var bootstrapScript = '''
+var bootstrapScriptTemplate = '''
 set -eu
-if [ ! -r /usr/local/lib/odoo/seed-realistic-demo.py ] || [ ! -r /mnt/extra-addons/realistic_demo/__manifest__.py ]; then
-  echo "ERROR: The configured Odoo image does not contain the realistic demo assets. Build src/odoo and deploy its immutable image tag." >&2
-  exit 1
-fi
-
 echo "Waiting for PostgreSQL..."
 python3 - <<'PY'
 import socket
@@ -70,6 +66,10 @@ odoo \
   --init="$ODOO_MODULES" \
   --stop-after-init
 
+cat > /tmp/seed-realistic-demo.py <<'ODOO_SEED_PY'
+__REALISTIC_DEMO_SEED__
+ODOO_SEED_PY
+
 odoo shell \
   --config=/tmp/odoo.conf \
   --db_host=127.0.0.1 \
@@ -77,7 +77,7 @@ odoo shell \
   --db_user="$POSTGRES_USER" \
   --db_password="$POSTGRES_PASSWORD" \
   --database="$POSTGRES_DB" \
-  < /usr/local/lib/odoo/seed-realistic-demo.py
+  < /tmp/seed-realistic-demo.py
 
 printf "env.ref('base.user_admin').write({'login': '$ODOO_ADMIN_LOGIN', 'password': '$ODOO_ADMIN_PASSWORD'}); env.cr.commit()\n" | odoo shell \
   --config=/tmp/odoo.conf \
@@ -90,6 +90,7 @@ printf "env.ref('base.user_admin').write({'login': '$ODOO_ADMIN_LOGIN', 'passwor
 touch /bootstrap/ready
 echo "Odoo demo database is initialized"
 '''
+var bootstrapScript = replace(bootstrapScriptTemplate, '__REALISTIC_DEMO_SEED__', realisticDemoSeed)
 
 var odooStartScript = '''
 set -eu

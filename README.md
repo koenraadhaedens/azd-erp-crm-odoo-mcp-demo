@@ -5,7 +5,7 @@ This repository deploys a reproducible Odoo demonstration sandbox into one Azure
 ## What gets deployed
 
 - PostgreSQL 16 with ephemeral `emptyDir` storage.
-- An Odoo 18 bootstrap container that creates a fresh database, loads demo data, installs CRM/ERP modules, and changes the Odoo administrator password.
+- An Odoo 18 bootstrap container that creates a fresh database, loads demo data, installs CRM/ERP modules, and changes the Odoo administrator password. The deployment embeds the seed script into the bootstrap command, so the anonymously available stock Odoo image doesn't need custom files.
 - A deterministic Contoso scenario with connected customers, vendors, products, inventory, opportunities, quotations, sales and purchase orders, projects, employees, maintenance, fleet, manufacturing, and accounting records.
 - Odoo 18, listening internally on TCP 8069.
 - The Odoo MCP server, listening internally on TCP 8000 by default and configured for Odoo JSON-RPC over `http://127.0.0.1:8069`.
@@ -24,21 +24,20 @@ The repository includes build contexts for all four images:
 | `odoo-mcp:<tag>` | `src/odoo-mcp`, the authenticated Python MCP server. |
 | `caddy-odoo:<tag>` | `src/caddy`, the project-specific HTTPS reverse proxy and routing configuration. |
 
-By default, `azd up` builds all four images remotely in `acrdefcontainer.azurecr.io` from this repository before provisioning ACI:
+By default, `azd up` consumes the anonymously available images in `acrdefcontainer.azurecr.io` without requiring access to the registry's tenant:
 
 ```text
 azd up
 ```
 
-Each build also updates the stable tag used by the Bicep default: `odoo:18.0`, `postgres:16`, `odoo-mcp:latest`, or `caddy-odoo:latest`. Immutable revision tags remain the values used by the normal `azd up` workflow.
-Remote ACR builds do not require local Docker. They require Azure CLI authentication and permission to queue builds in `acrdefcontainer`. Anonymous pull access is enabled on this registry, so ACI does not require registry credentials. The build is tagged with the current Git commit and reused until `IMAGE_TAG` changes. Set a new tag explicitly when rebuilding unchanged committed source:
+Set `BUILD_IMAGES=true` only when signed into the registry tenant with permission to queue ACR builds. A build updates the stable tags used by the Bicep defaults: `odoo:18.0`, `postgres:16`, `odoo-mcp:latest`, and `caddy-odoo:latest`. It also creates immutable revision tags. Set a new tag explicitly when rebuilding unchanged committed source:
 
 ```text
 azd env set IMAGE_TAG workshop-v2
 azd up
 ```
 
-To use images that already exist in the registry instead, set `BUILD_IMAGES=false` and configure `ODOO_IMAGE`, `POSTGRES_IMAGE`, `MCP_IMAGE`, and `CADDY_IMAGE` in the selected `azd` environment.
+To override the existing images, configure `ODOO_IMAGE`, `POSTGRES_IMAGE`, `MCP_IMAGE`, and `CADDY_IMAGE` in the selected `azd` environment.
 
 ## Deploy
 
@@ -74,8 +73,8 @@ To review changes before deploying, use `azd provision --preview`.
 ## Initialization flow
 
 1. PostgreSQL starts and initializes an empty data directory.
-2. `odoo-bootstrap` waits for TCP 5432, creates `odoo_demo`, and installs the `realistic_demo` add-on and its CRM, sales, purchase, inventory, accounting, project, HR, maintenance, fleet, manufacturing, website/e-commerce, and point-of-sale dependencies with Odoo demo data enabled.
-3. The bootstrap runs a deterministic seed script that creates an internally connected Contoso business scenario and then rotates the admin password.
+2. `odoo-bootstrap` waits for TCP 5432, creates `odoo_demo`, and installs the standard CRM, sales, purchase, inventory, accounting, project, HR, maintenance, fleet, manufacturing, website/e-commerce, and point-of-sale applications with Odoo demo data enabled.
+3. Bicep embeds the deterministic seed script in the bootstrap command. The bootstrap runs it to create an internally connected Contoso business scenario and then rotates the admin password.
 4. The bootstrap writes a readiness marker to a shared ephemeral volume.
 5. The Odoo web container sees the marker and starts against the initialized database.
 6. The MCP server connects to Odoo through the container group's loopback network.
