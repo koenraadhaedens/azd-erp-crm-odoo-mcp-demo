@@ -19,10 +19,10 @@ printf '  MCP URL:         %s\n' "$(get_azd_value MCP_URL)"
 printf '  Azure portal:    %s\n' "$(get_azd_value AZURE_PORTAL_URL)"
 
 printf '\nOdoo credentials\n'
-printf '  Database:        %s\n' "$(get_azd_value ODOO_DATABASE)"
-printf '  Administrator:   %s\n' "$(get_azd_value ODOO_ADMIN_LOGIN)"
-printf '  Password:        %s\n' "$(get_azd_value ODOO_ADMIN_PASSWORD)"
-printf '  Master password: %s\n' "$(get_azd_value ODOO_MASTER_PASSWORD)"
+printf '  Database:                  %s\n' "$(get_azd_value ODOO_DATABASE)"
+printf '  Web login:                 %s\n' "$(get_azd_value ODOO_ADMIN_LOGIN)"
+printf '  Web login password:        %s\n' "$(get_azd_value ODOO_ADMIN_PASSWORD)"
+printf '  Database manager password: %s\n' "$(get_azd_value ODOO_MASTER_PASSWORD)"
 
 printf '\nPostgreSQL credentials\n'
 printf '  User:            odoo\n'

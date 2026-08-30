@@ -20,10 +20,10 @@ Write-Host "  Azure portal:    $(Get-AzdEnvironmentValue 'AZURE_PORTAL_URL')"
 
 Write-Host ''
 Write-Host 'Odoo credentials' -ForegroundColor Green
-Write-Host "  Database:        $(Get-AzdEnvironmentValue 'ODOO_DATABASE')"
-Write-Host "  Administrator:   $(Get-AzdEnvironmentValue 'ODOO_ADMIN_LOGIN')"
-Write-Host "  Password:        $(Get-AzdEnvironmentValue 'ODOO_ADMIN_PASSWORD')"
-Write-Host "  Master password: $(Get-AzdEnvironmentValue 'ODOO_MASTER_PASSWORD')"
+Write-Host "  Database:                  $(Get-AzdEnvironmentValue 'ODOO_DATABASE')"
+Write-Host "  Web login:                 $(Get-AzdEnvironmentValue 'ODOO_ADMIN_LOGIN')"
+Write-Host "  Web login password:        $(Get-AzdEnvironmentValue 'ODOO_ADMIN_PASSWORD')"
+Write-Host "  Database manager password: $(Get-AzdEnvironmentValue 'ODOO_MASTER_PASSWORD')"
 
 Write-Host ''
 Write-Host 'PostgreSQL credentials' -ForegroundColor Green

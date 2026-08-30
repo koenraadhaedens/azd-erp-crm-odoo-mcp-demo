@@ -65,7 +65,7 @@ odoo \
   --init="$ODOO_MODULES" \
   --stop-after-init
 
-printf "env.ref('base.user_admin').write({'login': '$ODOO_ADMIN_LOGIN', 'password': '$ODOO_ADMIN_PASSWORD'})\n" | odoo shell \
+printf "env.ref('base.user_admin').write({'login': '$ODOO_ADMIN_LOGIN', 'password': '$ODOO_ADMIN_PASSWORD'}); env.cr.commit()\n" | odoo shell \
   --config=/tmp/odoo.conf \
   --db_host=127.0.0.1 \
   --db_port=5432 \
