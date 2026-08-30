@@ -13,7 +13,7 @@ if (-not (Get-Command az -ErrorAction SilentlyContinue)) {
 }
 
 $builds = @(
-    @{ Image = "odoo:$Tag"; Alias = 'odoo:demo-latest'; Context = 'src/odoo'; Dockerfile = 'src/odoo/Dockerfile' },
+    @{ Image = "odoo:$Tag"; Alias = 'odoo:18.0'; Context = 'src/odoo'; Dockerfile = 'src/odoo/Dockerfile' },
     @{ Image = "postgres:$Tag"; Alias = 'postgres:16'; Context = 'src/postgres'; Dockerfile = 'src/postgres/Dockerfile' },
     @{ Image = "odoo-mcp:$Tag"; Alias = 'odoo-mcp:latest'; Context = 'src/odoo-mcp'; Dockerfile = 'src/odoo-mcp/Dockerfile' },
     @{ Image = "caddy-odoo:$Tag"; Alias = 'caddy-odoo:latest'; Context = 'src/caddy'; Dockerfile = 'src/caddy/Dockerfile' }

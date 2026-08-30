@@ -28,7 +28,7 @@ if ($buildImages -ieq 'true') {
         }
         azd env set IMAGE_TAG $imageTag
     }
-    $imageBuildKey = "${imageTag}-realistic-demo-v1"
+    $imageBuildKey = "${imageTag}-realistic-demo-v2"
     $lastBuiltTag = Get-AzdValue 'LAST_BUILT_IMAGE_TAG'
     if ($lastBuiltTag -ne $imageBuildKey) {
         & "$PSScriptRoot/build-images.ps1" -Registry $registryName -Tag $imageTag
@@ -42,7 +42,7 @@ if ($buildImages -ieq 'true') {
 }
 else {
     if ([string]::IsNullOrWhiteSpace((Get-AzdValue 'ODOO_IMAGE'))) {
-        azd env set ODOO_IMAGE "$registryServer/odoo:demo-latest"
+        azd env set ODOO_IMAGE "$registryServer/odoo:18.0"
     }
     if ([string]::IsNullOrWhiteSpace((Get-AzdValue 'POSTGRES_IMAGE'))) {
         azd env set POSTGRES_IMAGE "$registryServer/postgres:16"
