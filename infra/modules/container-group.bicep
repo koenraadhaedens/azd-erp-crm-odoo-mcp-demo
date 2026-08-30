@@ -58,6 +58,7 @@ chmod 600 /tmp/odoo.conf
 
 odoo \
   --config=/tmp/odoo.conf \
+  --data-dir=/bootstrap/odoo-data \
   --db_host=127.0.0.1 \
   --db_port=5432 \
   --db_user="$POSTGRES_USER" \
@@ -72,6 +73,7 @@ ODOO_SEED_PY
 
 odoo shell \
   --config=/tmp/odoo.conf \
+  --data-dir=/bootstrap/odoo-data \
   --db_host=127.0.0.1 \
   --db_port=5432 \
   --db_user="$POSTGRES_USER" \
@@ -81,6 +83,7 @@ odoo shell \
 
 printf "env.ref('base.user_admin').write({'login': '$ODOO_ADMIN_LOGIN', 'password': '$ODOO_ADMIN_PASSWORD'}); env.cr.commit()\n" | odoo shell \
   --config=/tmp/odoo.conf \
+  --data-dir=/bootstrap/odoo-data \
   --db_host=127.0.0.1 \
   --db_port=5432 \
   --db_user="$POSTGRES_USER" \
@@ -100,6 +103,7 @@ printf '[options]\nadmin_passwd = %s\n' "$ODOO_MASTER_PASSWORD" > /tmp/odoo.conf
 chmod 600 /tmp/odoo.conf
 exec odoo \
   --config=/tmp/odoo.conf \
+  --data-dir=/bootstrap/odoo-data \
   --db_host=127.0.0.1 \
   --db_port=5432 \
   --db_user="$POSTGRES_USER" \
@@ -396,7 +400,7 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2025-09-01'
 output containerGroupName string = containerGroup.name
 output containerGroupId string = containerGroup.id
 output fqdn string = containerGroup.properties.ipAddress.fqdn
-output odooUrl string = 'https://${containerGroup.properties.ipAddress.fqdn}'
+output odooUrl string = 'https://${containerGroup.properties.ipAddress.fqdn}/web'
 output mcpUrl string = 'https://${containerGroup.properties.ipAddress.fqdn}/mcp'
 output odooDatabase string = postgresDatabase
 output odooAdminLogin string = odooAdminLogin

@@ -75,8 +75,8 @@ To review changes before deploying, use `azd provision --preview`.
 1. PostgreSQL starts and initializes an empty data directory.
 2. `odoo-bootstrap` waits for TCP 5432, creates `odoo_demo`, and installs the standard CRM, sales, purchase, inventory, accounting, project, HR, maintenance, fleet, manufacturing, website/e-commerce, and point-of-sale applications with Odoo demo data enabled.
 3. Bicep embeds the deterministic seed script in the bootstrap command. The bootstrap runs it to create an internally connected Contoso business scenario and then rotates the admin password.
-4. The bootstrap writes a readiness marker to a shared ephemeral volume.
-5. The Odoo web container sees the marker and starts against the initialized database.
+4. The bootstrap writes Odoo's generated attachments and assets plus a readiness marker to a shared ephemeral volume.
+5. The Odoo web container sees the marker and starts against the initialized database and shared filestore.
 6. The MCP server connects to Odoo through the container group's loopback network.
 7. Caddy obtains a public certificate and routes HTTPS traffic to the internal application listeners.
 
@@ -90,8 +90,10 @@ The Odoo image starts through a root wrapper only long enough to set ownership o
 
 The deployment uses the generated Azure Container Instances hostname directly; no custom domain is required. It returns these endpoints on one `*.azurecontainer.io` FQDN:
 
-- `ODOO_URL`: `https://<fqdn>`
+- `ODOO_URL`: `https://<fqdn>/web` (the Odoo backend login)
 - `MCP_URL`: `https://<fqdn>/mcp`
+
+The hostname root (`https://<fqdn>/`) intentionally opens the Odoo Website application because the demo installs website and e-commerce modules.
 
 Caddy routes `/mcp` and `/mcp/*` to MCP without stripping the path. All other paths go to Odoo. Incoming authorization headers are preserved, and Caddy supplies the forwarding headers consumed by Odoo's proxy mode. Port 80 remains open for ACME HTTP validation and redirects normal HTTP requests to HTTPS.
 
