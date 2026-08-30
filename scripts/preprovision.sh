@@ -20,7 +20,7 @@ if [ "$BUILD_IMAGES_VALUE" = "true" ]; then
     IMAGE_TAG_VALUE="$(git rev-parse --short=12 HEAD 2>/dev/null || date -u +%Y%m%d%H%M%S)"
     azd env set IMAGE_TAG "$IMAGE_TAG_VALUE"
   fi
-  IMAGE_BUILD_KEY="${IMAGE_TAG_VALUE}-odoo-volume-v3"
+  IMAGE_BUILD_KEY="${IMAGE_TAG_VALUE}-realistic-demo-v1"
   LAST_BUILT_TAG_VALUE="$(get_azd_value LAST_BUILT_IMAGE_TAG)"
   if [ "$LAST_BUILT_TAG_VALUE" != "$IMAGE_BUILD_KEY" ]; then
     sh "$(dirname "$0")/build-images.sh" "$ACR_NAME_VALUE" "$IMAGE_TAG_VALUE"

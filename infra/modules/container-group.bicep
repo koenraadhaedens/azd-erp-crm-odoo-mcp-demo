@@ -65,6 +65,15 @@ odoo \
   --init="$ODOO_MODULES" \
   --stop-after-init
 
+odoo shell \
+  --config=/tmp/odoo.conf \
+  --db_host=127.0.0.1 \
+  --db_port=5432 \
+  --db_user="$POSTGRES_USER" \
+  --db_password="$POSTGRES_PASSWORD" \
+  --database="$POSTGRES_DB" \
+  < /usr/local/lib/odoo/seed-realistic-demo.py
+
 printf "env.ref('base.user_admin').write({'login': '$ODOO_ADMIN_LOGIN', 'password': '$ODOO_ADMIN_PASSWORD'}); env.cr.commit()\n" | odoo shell \
   --config=/tmp/odoo.conf \
   --db_host=127.0.0.1 \

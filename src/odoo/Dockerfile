@@ -8,7 +8,10 @@ FROM odoo:18.0
 USER root
 
 COPY run-with-bootstrap-volume.sh /usr/local/bin/run-with-bootstrap-volume
-RUN chmod 0755 /usr/local/bin/run-with-bootstrap-volume
+COPY seed-realistic-demo.py /usr/local/lib/odoo/seed-realistic-demo.py
+COPY addons /mnt/extra-addons
+RUN chmod 0755 /usr/local/bin/run-with-bootstrap-volume \
+	&& chown -R odoo:odoo /mnt/extra-addons /usr/local/lib/odoo/seed-realistic-demo.py
 
 # The wrapper fixes ownership of the mounted emptyDir and then drops privileges
 # to the stock image's non-root Odoo account before starting the application.

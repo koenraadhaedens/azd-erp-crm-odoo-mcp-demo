@@ -6,6 +6,7 @@ This repository deploys a reproducible Odoo demonstration sandbox into one Azure
 
 - PostgreSQL 16 with ephemeral `emptyDir` storage.
 - An Odoo 18 bootstrap container that creates a fresh database, loads demo data, installs CRM/ERP modules, and changes the Odoo administrator password.
+- A deterministic Contoso scenario with connected customers, vendors, products, inventory, opportunities, quotations, sales and purchase orders, projects, employees, maintenance, fleet, manufacturing, and accounting records.
 - Odoo 18, listening internally on TCP 8069.
 - The Odoo MCP server, listening internally on TCP 8000 by default and configured for Odoo JSON-RPC over `http://127.0.0.1:8069`.
 - Caddy as the only public ingress on TCP 80 and 443, with automatic HTTPS for the generated ACI FQDN.
@@ -71,11 +72,14 @@ To review changes before deploying, use `azd provision --preview`.
 ## Initialization flow
 
 1. PostgreSQL starts and initializes an empty data directory.
-2. `odoo-bootstrap` waits for TCP 5432, creates `odoo_demo`, installs the configured modules with Odoo demo data enabled, and rotates the admin password.
-3. The bootstrap writes a readiness marker to a shared ephemeral volume.
-4. The Odoo web container sees the marker and starts against the initialized database.
-5. The MCP server connects to Odoo through the container group's loopback network.
-6. Caddy obtains a public certificate and routes HTTPS traffic to the internal application listeners.
+2. `odoo-bootstrap` waits for TCP 5432, creates `odoo_demo`, and installs the `realistic_demo` add-on and its CRM, sales, purchase, inventory, accounting, project, HR, maintenance, fleet, manufacturing, website/e-commerce, and point-of-sale dependencies with Odoo demo data enabled.
+3. The bootstrap runs a deterministic seed script that creates an internally connected Contoso business scenario and then rotates the admin password.
+4. The bootstrap writes a readiness marker to a shared ephemeral volume.
+5. The Odoo web container sees the marker and starts against the initialized database.
+6. The MCP server connects to Odoo through the container group's loopback network.
+7. Caddy obtains a public certificate and routes HTTPS traffic to the internal application listeners.
+
+The seed uses `DEMO-` references, SKUs, and names so its records are easy to find. Workflow records are created through Odoo's ORM and normal confirmation/posting actions. Optional accounting or operational records are skipped with a bootstrap log message if the corresponding company configuration is unavailable; the core CRM, sales, purchase, inventory, project, and HR scenario still completes.
 
 Only Caddy ports 80 and 443 are public. PostgreSQL, Odoo, and MCP have no public ACI port mappings.
 

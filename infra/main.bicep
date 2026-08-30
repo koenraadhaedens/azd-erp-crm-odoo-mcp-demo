@@ -21,7 +21,7 @@ param mcpImage string = 'acrdefcontainer.azurecr.io/odoo-mcp:latest'
 param caddyImage string = 'acrdefcontainer.azurecr.io/caddy-odoo:latest'
 
 @description('Comma-separated Odoo modules installed by the bootstrap container.')
-param odooModules string = 'base,crm,sale_management,purchase,stock,account'
+param odooModules string = 'realistic_demo'
 
 @minValue(1)
 @maxValue(65535)
