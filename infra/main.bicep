@@ -9,7 +9,7 @@ param environmentName string
 param location string
 
 @description('Odoo image mirrored in the external registry.')
-param odooImage string = 'acrdefcontainer.azurecr.io/odoo:18.0'
+param odooImage string = 'acrdefcontainer.azurecr.io/odoo:demo-latest'
 
 @description('PostgreSQL image mirrored in the external registry.')
 param postgresImage string = 'acrdefcontainer.azurecr.io/postgres:16'

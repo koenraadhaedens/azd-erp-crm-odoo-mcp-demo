@@ -31,7 +31,7 @@ if [ "$BUILD_IMAGES_VALUE" = "true" ]; then
   azd env set MCP_IMAGE "$ACR_SERVER_VALUE/odoo-mcp:$IMAGE_TAG_VALUE"
   azd env set CADDY_IMAGE "$ACR_SERVER_VALUE/caddy-odoo:$IMAGE_TAG_VALUE"
 else
-  [ -n "$(get_azd_value ODOO_IMAGE)" ] || azd env set ODOO_IMAGE "$ACR_SERVER_VALUE/odoo:18.0"
+  [ -n "$(get_azd_value ODOO_IMAGE)" ] || azd env set ODOO_IMAGE "$ACR_SERVER_VALUE/odoo:demo-latest"
   [ -n "$(get_azd_value POSTGRES_IMAGE)" ] || azd env set POSTGRES_IMAGE "$ACR_SERVER_VALUE/postgres:16"
   [ -n "$(get_azd_value MCP_IMAGE)" ] || azd env set MCP_IMAGE "$ACR_SERVER_VALUE/odoo-mcp:latest"
   [ -n "$(get_azd_value CADDY_IMAGE)" ] || azd env set CADDY_IMAGE "$ACR_SERVER_VALUE/caddy-odoo:latest"

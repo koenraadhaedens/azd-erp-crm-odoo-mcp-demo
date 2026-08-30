@@ -34,7 +34,7 @@ build_image() {
     --only-show-errors
 }
 
-build_image "odoo:$TAG" "odoo:18.0" "src/odoo/Dockerfile" "src/odoo"
+build_image "odoo:$TAG" "odoo:demo-latest" "src/odoo/Dockerfile" "src/odoo"
 build_image "postgres:$TAG" "postgres:16" "src/postgres/Dockerfile" "src/postgres"
 build_image "odoo-mcp:$TAG" "odoo-mcp:latest" "src/odoo-mcp/Dockerfile" "src/odoo-mcp"
 build_image "caddy-odoo:$TAG" "caddy-odoo:latest" "src/caddy/Dockerfile" "src/caddy"

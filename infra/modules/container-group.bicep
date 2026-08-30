@@ -36,6 +36,11 @@ var containerGroupFqdn = '${dnsNameLabel}.${location}.azurecontainer.io'
 // rotates the admin credential, and releases the web process through an emptyDir marker.
 var bootstrapScript = '''
 set -eu
+if [ ! -r /usr/local/lib/odoo/seed-realistic-demo.py ] || [ ! -r /mnt/extra-addons/realistic_demo/__manifest__.py ]; then
+  echo "ERROR: The configured Odoo image does not contain the realistic demo assets. Build src/odoo and deploy its immutable image tag." >&2
+  exit 1
+fi
+
 echo "Waiting for PostgreSQL..."
 python3 - <<'PY'
 import socket

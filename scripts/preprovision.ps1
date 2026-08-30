@@ -42,7 +42,7 @@ if ($buildImages -ieq 'true') {
 }
 else {
     if ([string]::IsNullOrWhiteSpace((Get-AzdValue 'ODOO_IMAGE'))) {
-        azd env set ODOO_IMAGE "$registryServer/odoo:18.0"
+        azd env set ODOO_IMAGE "$registryServer/odoo:demo-latest"
     }
     if ([string]::IsNullOrWhiteSpace((Get-AzdValue 'POSTGRES_IMAGE'))) {
         azd env set POSTGRES_IMAGE "$registryServer/postgres:16"
