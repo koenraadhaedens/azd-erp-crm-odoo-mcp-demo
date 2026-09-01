@@ -401,6 +401,6 @@ output containerGroupName string = containerGroup.name
 output containerGroupId string = containerGroup.id
 output fqdn string = containerGroup.properties.ipAddress.fqdn
 output odooUrl string = 'https://${containerGroup.properties.ipAddress.fqdn}/web'
-output mcpUrl string = 'https://${containerGroup.properties.ipAddress.fqdn}/mcp'
+output mcpUrl string = 'https://${containerGroup.properties.ipAddress.fqdn}/mcp/'
 output odooDatabase string = postgresDatabase
 output odooAdminLogin string = odooAdminLogin
