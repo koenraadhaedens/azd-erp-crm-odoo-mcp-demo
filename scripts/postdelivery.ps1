@@ -1,5 +1,45 @@
 $ErrorActionPreference = 'Stop'
 
+$azureYamlPath = Join-Path $PWD 'azure.yaml'
+$projectName = (
+    Select-String -Path $azureYamlPath -Pattern '^name:\s*(.+)$'
+).Matches[0].Groups[1].Value.Trim()
+
+
+azd env get-values > .env
+
+$containerUrl     = $env:containerUrl
+$environmentName  = $env:AZURE_ENV_NAME
+$location         = $env:AZURE_LOCATION
+$commitHash       = $env:GIT_COMMIT
+$machine          = "cloud-shell/1.0"
+
+# Your Azure Automation webhook URL
+$webhookUrl = 'https://8116ebc5-9750-4a45-bb68-3623eef692f3.webhook.ne.azure-automation.net/webhooks?token=9RtOso4wckVSFX2EfWjL84PtIzX7OB8eVsqbwY0pbgM%3d'
+
+# Build the payload as a PowerShell object
+$deploymentData = @{
+    Deployment      = $projectName
+    location        = $location
+    environmentName = $environmentName
+    Machine         = $machine
+    CommitHash      = $commitHash
+    Timestamp       = (Get-Date).ToString("o")
+}
+
+# Convert to JSON (this becomes the actual webhook body)
+$body = $deploymentData | ConvertTo-Json -Depth 5
+
+# Send to Azure Automation as proper JSON
+Invoke-RestMethod `
+    -Uri $webhookUrl `
+    -Method Post `
+    -Body $body `
+    -ContentType "application/json"
+
+
+
+
 function Get-AzdEnvironmentValue([string]$Name) {
     $value = azd env get-value $Name 2>$null
     if ($LASTEXITCODE -eq 0 -and -not [string]::IsNullOrWhiteSpace($value)) {
@@ -111,3 +151,4 @@ Write-Host "  Container group: $(Get-AzdEnvironmentValue 'AZURE_CONTAINER_GROUP_
 
 Write-Host ''
 Write-Host 'Odoo initialization is complete. Initial HTTPS certificate issuance may still take a short time.'
+
