@@ -169,3 +169,9 @@ This repository deliberately favors a quick, repeatable demo over production dur
 - The container group has no per-user authorization, private network, audit pipeline, or rate limiting.
 
 A production design should use Microsoft Entra ID, managed identities, Azure Key Vault, durable managed database and storage services, private networking, managed ingress, backups, monitoring, and operation-level authorization. Avoid retaining deployment logs or sharing a screen while the generated credentials are visible.
+
+## License
+
+Except where otherwise noted, the original source code in this repository is licensed under the [MIT License](LICENSE).
+
+The custom Odoo addon under `src/odoo/addons/realistic_demo` is licensed under LGPL-3.0-only. Odoo, PostgreSQL, Caddy, Python, container base images, and other third-party dependencies remain subject to their respective licenses and trademark policies.
