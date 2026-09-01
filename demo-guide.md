@@ -26,7 +26,7 @@ You need:
 The deployment output contains values similar to:
 
 ```text
-MCP URL: https://<generated-name>.<region>.azurecontainer.io/mcp
+MCP URL: https://<generated-name>.<region>.azurecontainer.io/mcp/ (A trailing / is mandatory.)
 API key: Mcp-<generated-value>!
 ```
 
