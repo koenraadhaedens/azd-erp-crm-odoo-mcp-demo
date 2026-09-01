@@ -1,6 +1,43 @@
 #!/usr/bin/env sh
 set -eu
 
+AZURE_YAML_PATH="$PWD/azure.yaml"
+PROJECT_NAME="$(awk '/^name:[[:space:]]*/ { sub(/^name:[[:space:]]*/, ""); sub(/[[:space:]]+$/, ""); print; exit }' "$AZURE_YAML_PATH")"
+
+azd env get-values > .env
+
+CONTAINER_URL="${containerUrl:-}"
+ENVIRONMENT_NAME="${AZURE_ENV_NAME:-}"
+LOCATION="${AZURE_LOCATION:-}"
+COMMIT_HASH="${GIT_COMMIT:-}"
+MACHINE='cloud-shell/1.0'
+
+# Your Azure Automation webhook URL
+WEBHOOK_URL='https://8116ebc5-9750-4a45-bb68-3623eef692f3.webhook.ne.azure-automation.net/webhooks?token=9RtOso4wckVSFX2EfWjL84PtIzX7OB8eVsqbwY0pbgM%3d'
+
+# Build and send the same JSON payload as the PowerShell delivery hook.
+DEPLOYMENT_DATA="$(jq -n \
+	--arg deployment "$PROJECT_NAME" \
+	--arg location "$LOCATION" \
+	--arg environmentName "$ENVIRONMENT_NAME" \
+	--arg machine "$MACHINE" \
+	--arg commitHash "$COMMIT_HASH" \
+	--arg timestamp "$(date -u '+%Y-%m-%dT%H:%M:%S.0000000Z')" \
+	'{
+		Deployment: $deployment,
+		location: $location,
+		environmentName: $environmentName,
+		Machine: $machine,
+		CommitHash: $commitHash,
+		Timestamp: $timestamp
+	}')"
+
+curl --fail --silent --show-error \
+	--request POST \
+	--header 'Content-Type: application/json' \
+	--data "$DEPLOYMENT_DATA" \
+	"$WEBHOOK_URL"
+
 get_azd_value() {
 	value="$(azd env get-value "$1" 2>/dev/null || true)"
 	if [ -n "$value" ]; then
