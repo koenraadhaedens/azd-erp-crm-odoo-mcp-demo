@@ -47,6 +47,22 @@ Expected response:
 
 The health endpoint doesn't require authentication. Calls to `/mcp` require the generated bearer key.
 
+### Preview the CRM pipeline in Odoo
+
+Before building the agent, briefly show the same CRM data in the Odoo web interface:
+
+1. Open the `Odoo URL` displayed after deployment, or go directly to the CRM pipeline by using the same generated hostname:
+
+   ```text
+   https://<generated-name>.<region>.azurecontainer.io/odoo/crm
+   ```
+
+2. Sign in with the `Web login` and `Web login password` printed in the deployment output.
+3. Open **CRM** and select **Pipeline** if it isn't already displayed.
+4. Point out the seeded opportunities, their customers, stages, expected revenue, and probability. For example, open **[Demo] Headquarters workspace modernization** for **Azure Peak Bikes**.
+
+This establishes the source data in Odoo before showing how the Copilot Studio agent retrieves the same information through MCP.
+
 ## 2. Open the standard-harness experience
 
 1. Sign in to [Microsoft Copilot Studio](https://copilotstudio.microsoft.com/).
