@@ -1,114 +1,171 @@
-# Disposable Odoo ERP/CRM MCP demo on Azure Container Instances
+# Disposable Odoo ERP/CRM MCP demo on Azure
 
-This repository deploys a reproducible Odoo demonstration sandbox into one Azure Container Instances (ACI) container group. PostgreSQL, an Odoo bootstrap process, Odoo, the MCP server, and Caddy share the group's loopback network while remaining separate containers.
+This project creates a ready-to-use Odoo business demo in Azure. It includes a website with realistic sample customers, products, sales orders, and CRM opportunities, plus an MCP connection that lets an AI agent work with that data. Everything runs in one temporary Azure environment, and the deployment prints the links and sign-in details when it is ready.
 
-## What gets deployed
+The environment is intended for workshops and demonstrations. Its data and generated credentials are disposable and must not be used for production.
 
-- PostgreSQL 16 with ephemeral `emptyDir` storage.
-- An Odoo 18 bootstrap container that creates a fresh database, loads demo data, installs CRM/ERP modules, and changes the Odoo administrator password. The deployment embeds the seed script into the bootstrap command, so the anonymously available stock Odoo image doesn't need custom files.
-- A deterministic Contoso scenario with connected customers, vendors, products, inventory, opportunities, quotations, sales and purchase orders, projects, employees, maintenance, fleet, manufacturing, and accounting records.
-- Odoo 18, listening internally on TCP 8069.
-- The Odoo MCP server, listening internally on TCP 8000 by default and configured for Odoo JSON-RPC over `http://127.0.0.1:8069`.
-- Caddy as the only public ingress on TCP 80 and 443, with automatic HTTPS for the generated ACI FQDN.
+## Deploy from Azure Cloud Shell
 
-Every reprovision replaces the sandbox and its generated credentials. This is intentional and makes the project suitable for workshops and isolated demos; it is not a production architecture.
+### 1. Open Cloud Shell
 
-## Included container sources
+1. Open [Azure Cloud Shell](https://shell.azure.com/).
+2. Sign in with the Azure account that owns the subscription you want to use.
+3. Select **Bash** when prompted.
+4. If this is your first Cloud Shell session, follow the prompt to create or attach its storage.
 
-The repository includes build contexts for all four images:
+### 2. Download the project
 
-| Repository/tag | Source |
-| --- | --- |
-| `odoo:<tag>` | `src/odoo`, based on Odoo 18. |
-| `postgres:<tag>` | `src/postgres`, based on PostgreSQL 16 Bookworm. |
-| `odoo-mcp:<tag>` | `src/odoo-mcp`, the authenticated Python MCP server. |
-| `caddy-odoo:<tag>` | `src/caddy`, the project-specific HTTPS reverse proxy and routing configuration. |
+Run the following commands:
 
-By default, `azd up` consumes the anonymously available images in `acrdefcontainer.azurecr.io` without requiring access to the registry's tenant:
+```bash
+git clone https://github.com/koenraadhaedens/azd-erp-crm-odoo-mcp-demo.git
+cd azd-erp-crm-odoo-mcp-demo
+```
 
-```text
+### 3. Sign in to Azure Developer CLI
+
+Cloud Shell is already signed in to Azure CLI. Azure Developer CLI uses its own sign-in, so start the device-code flow:
+
+```bash
+azd auth login --use-device-code
+```
+
+Open the displayed sign-in link, enter the code, and complete authentication with the same Azure account.
+
+### 4. Deploy the demo
+
+```bash
 azd up
 ```
 
-Set `BUILD_IMAGES=true` only when signed into the registry tenant with permission to queue ACR builds. A build updates the stable tags used by the Bicep defaults: `odoo:18.0`, `postgres:16`, `odoo-mcp:latest`, and `caddy-odoo:latest`. It also creates immutable revision tags. Set a new tag explicitly when rebuilding unchanged committed source:
+When prompted:
 
-```text
-azd env set IMAGE_TAG workshop-v2
-azd up
+1. Enter a short environment name, such as `odoo-demo`.
+2. Select the Azure subscription to use.
+3. Select an Azure region that supports Azure Container Instances.
+
+Deployment normally takes several minutes. The final step waits for Odoo to install its applications and load the realistic demo data; this can take up to 20 minutes.
+
+### 5. Save the delivery information
+
+When deployment finishes, the output displays:
+
+- The Odoo website URL.
+- The Odoo web login and password.
+- The MCP URL and API key.
+- Links to the deployed Azure resources.
+
+These are generated demo credentials. Do not publish them or reuse them elsewhere. If the initial HTTPS certificate is still being issued, wait briefly and reload the Odoo URL.
+
+Continue with the [Copilot Studio demo guide](demo-guide.md) to preview the Odoo CRM pipeline and connect the MCP server to an agent.
+
+### Remove the demo
+
+Return to the same Cloud Shell directory and run:
+
+```bash
+azd down --purge
 ```
 
-To override the existing images, configure `ODOO_IMAGE`, `POSTGRES_IMAGE`, `MCP_IMAGE`, and `CADDY_IMAGE` in the selected `azd` environment.
+Review the resources listed by the command and confirm their deletion. Removing the resource group permanently deletes the demo database, files, certificates, and generated credentials.
 
-## Deploy
+## Technical architecture
 
-Prerequisites:
+The Bicep templates deploy one Linux Azure Container Instances container group named `aci-<environment-name>` into a resource group named `rg-<environment-name>`. The group contains five containers built from four images.
 
-1. Azure Developer CLI (`azd`).
-2. Access to an Azure subscription with permission to create a resource group and ACI container group.
-3. Azure CLI (`az`) only when `BUILD_IMAGES=true`.
+```mermaid
+flowchart LR
+	user[Browser or MCP client]
 
-Run:
+	subgraph azure[Azure resource group]
+		subgraph aci[Azure Container Instances container group]
+			caddy[Caddy<br/>public ports 80 and 443]
+			odoo[Odoo 18<br/>internal port 8069]
+			mcp[Odoo MCP server<br/>internal port 8000]
+			postgres[(PostgreSQL 16<br/>internal port 5432)]
+			bootstrap[Odoo bootstrap<br/>runs initialization]
 
-```text
-azd auth login
-azd up
+			bootstrap -->|creates database and demo data| postgres
+			bootstrap -->|readiness marker and Odoo files| state[(bootstrap-state<br/>ephemeral volume)]
+			state --> odoo
+			odoo -->|SQL| postgres
+			mcp -->|Odoo JSON-RPC| odoo
+			caddy -->|all other paths| odoo
+			caddy -->|/mcp and /mcp/*| mcp
+			postgres --> pgdata[(postgres-data<br/>ephemeral volume)]
+			caddy --> tls[(caddy data/config<br/>ephemeral volumes)]
+		end
+	end
+
+	user -->|HTTPS| caddy
 ```
 
-Select the subscription and region. A first provisioning layer generates disposable application credentials as deployment outputs. `azd` propagates them to the dependent application layer as secure Bicep parameters and saves them in the local environment so the post-provision delivery summary can print them. The summary also runs after `azd deploy`.
+Only Caddy exposes public ports. PostgreSQL, Odoo, and the MCP server communicate through the container group's shared loopback network and have no direct public ACI port mappings.
 
-The delivery hook displays an animated initialization status and waits up to 20 minutes for the `odoo-bootstrap` container to finish successfully. Endpoints and credentials are printed only after the applications and realistic demo data are ready. If initialization fails or times out, the hook prints recent bootstrap logs and fails without displaying credentials.
+### Containers
 
-The credential outputs are intentionally not marked secure because Azure Developer CLI does not persist secure outputs. Consequently, these demo credentials are visible in deployment outputs and local `azd` state. This tradeoff is suitable only for this disposable workshop sandbox; production deployments must use Key Vault or managed identity and must not print credentials.
+| Container | Purpose | Requested resources |
+| --- | --- | ---: |
+| `postgres` | Runs the disposable Odoo PostgreSQL database. | 1 vCPU, 1 GB |
+| `odoo-bootstrap` | Installs Odoo applications, loads demo data, rotates the administrator password, and then exits. | 1 vCPU, 2 GB |
+| `odoo` | Serves the Odoo website and backend after bootstrap completes. | 1 vCPU, 2 GB |
+| `mcp-server` | Exposes bounded, bearer-authenticated tools for Odoo CRM and sales operations. | 1 vCPU, 1 GB |
+| `caddy` | Terminates HTTPS and routes public requests to Odoo or MCP. | 1 vCPU, 1 GB |
 
-To reset an existing environment with a new empty database and new credentials:
+### Initialization and data lifecycle
 
-```text
-azd deploy
-```
+1. PostgreSQL starts with an empty data directory.
+2. The bootstrap container waits for PostgreSQL and creates the `odoo_demo` database.
+3. It installs the CRM, sales, purchase, inventory, accounting, project, HR, maintenance, fleet, manufacturing, website/e-commerce, and point-of-sale applications.
+4. It creates a connected Contoso scenario containing customers, vendors, products, inventory, opportunities, quotations, orders, projects, employees, and other operational records.
+5. It writes a readiness marker and generated Odoo files to the shared `bootstrap-state` volume.
+6. The Odoo web container detects the marker and starts. The MCP server then accesses Odoo over JSON-RPC.
+7. Caddy obtains a certificate for the generated `*.azurecontainer.io` hostname and serves the public HTTPS endpoints.
 
-Because ACI is an infrastructure resource rather than an `azd` application host, the `predeploy` hook runs `azd provision`; the subsequent deploy phase has no source artifact to upload. `azd up` can therefore perform one additional idempotent provision pass.
+All volumes use ACI `emptyDir` storage. Replacing or deleting the container group therefore deletes the database, Odoo files, readiness state, and cached TLS certificates.
 
-To review changes before deploying, use `azd provision --preview`.
+### Public endpoints and routing
 
-## Initialization flow
+The deployment uses one generated ACI hostname:
 
-1. PostgreSQL starts and initializes an empty data directory.
-2. `odoo-bootstrap` waits for TCP 5432, creates `odoo_demo`, and installs the standard CRM, sales, purchase, inventory, accounting, project, HR, maintenance, fleet, manufacturing, website/e-commerce, and point-of-sale applications with Odoo demo data enabled.
-3. Bicep embeds the deterministic seed script in the bootstrap command. The bootstrap runs it to create an internally connected Contoso business scenario and then rotates the admin password.
-4. The bootstrap writes Odoo's generated attachments and assets plus a readiness marker to a shared ephemeral volume.
-5. The Odoo web container sees the marker and starts against the initialized database and shared filestore.
-6. The MCP server connects to Odoo through the container group's loopback network.
-7. Caddy obtains a public certificate and routes HTTPS traffic to the internal application listeners.
+- `https://<generated-name>.<region>.azurecontainer.io/` opens the Odoo website.
+- `https://<generated-name>.<region>.azurecontainer.io/web` opens the Odoo backend login.
+- `https://<generated-name>.<region>.azurecontainer.io/mcp` exposes the Streamable HTTP MCP endpoint.
+- `https://<generated-name>.<region>.azurecontainer.io/health` exposes the public MCP health check.
 
-The seed uses `DEMO-` references, SKUs, and names so its records are easy to find. Workflow records are created through Odoo's ORM and normal confirmation/posting actions. Optional accounting or operational records are skipped with a bootstrap log message if the corresponding company configuration is unavailable; the core CRM, sales, purchase, inventory, project, and HR scenario still completes.
+Caddy routes `/mcp` and `/mcp/*` to the MCP server without removing the path. All other requests go to Odoo. Port 80 supports certificate validation and redirects normal requests to HTTPS.
 
-Only Caddy ports 80 and 443 are public. PostgreSQL, Odoo, and MCP have no public ACI port mappings.
+MCP clients must send the generated key as a bearer token:
 
-The Odoo image starts through a root wrapper only long enough to set ownership on ACI's root-owned readiness volume, then immediately drops to the stock non-root `odoo` account before running bootstrap or the web server.
-
-## HTTPS endpoints
-
-The deployment uses the generated Azure Container Instances hostname directly; no custom domain is required. It returns these endpoints on one `*.azurecontainer.io` FQDN:
-
-- `ODOO_URL`: `https://<fqdn>/web` (the Odoo backend login)
-- `MCP_URL`: `https://<fqdn>/mcp`
-
-The hostname root (`https://<fqdn>/`) intentionally opens the Odoo Website application because the demo installs website and e-commerce modules.
-
-Caddy routes `/mcp` and `/mcp/*` to MCP without stripping the path. All other paths go to Odoo. Incoming authorization headers are preserved, and Caddy supplies the forwarding headers consumed by Odoo's proxy mode. Port 80 remains open for ACME HTTP validation and redirects normal HTTP requests to HTTPS.
-
-Initial certificate issuance happens asynchronously and can take a short time after ACI starts. Caddy validates the generated ACI hostname over ports 80/443 and obtains a publicly trusted certificate for that exact hostname. Caddy stores certificates under `/data` in a writable group volume, which survives individual container restarts but is deleted with this disposable container group. Repeatedly replacing the group can trigger public certificate-authority rate limits.
-
-## MCP server
-
-The HTTPS Streamable HTTP endpoint is returned as `MCP_URL` and ends in `/mcp`. Clients must send the generated key as an HTTP bearer token:
-
-```text
+```http
 Authorization: Bearer <MCP_API_KEY>
 ```
 
-The server provides bounded tools for health, contact search/creation, CRM lead search/creation, product search, and sales-order listing. It intentionally does not expose arbitrary Odoo models, methods, domains, or fields. See `src/odoo-mcp/README.md` for its environment contract and tool list.
+The MCP server provides bounded tools for health checks, contact search and creation, CRM lead search and creation, product search, and sales-order listing. It does not expose arbitrary Odoo models or methods. See [the MCP server documentation](src/odoo-mcp/README.md) for the environment contract and complete tool list.
 
-## Important security note
+### Container images
 
-The post-delivery scripts intentionally display generated credentials because this repository is a disposable demo. Avoid CI log retention, screen sharing, or reuse of these values. For production, remove credential printing, use managed identity/Key Vault, use a managed TLS ingress, and use persistent managed database/storage services.
+Normal deployments use anonymously available images from `acrdefcontainer.azurecr.io`:
+
+| Image | Source in this repository |
+| --- | --- |
+| `odoo:18.0` | `src/odoo` |
+| `postgres:16` | `src/postgres` |
+| `odoo-mcp:latest` | `src/odoo-mcp` |
+| `caddy-odoo:latest` | `src/caddy` |
+
+The bootstrap container reuses the Odoo image. The deterministic seed script is embedded into the generated deployment command by Bicep, so the normal deployment does not require a custom Odoo image containing that script.
+
+Set `BUILD_IMAGES=true` only when signed in to the image registry's tenant with permission to queue Azure Container Registry builds. Image locations can also be overridden through the `ODOO_IMAGE`, `POSTGRES_IMAGE`, `MCP_IMAGE`, and `CADDY_IMAGE` Azure Developer CLI environment values.
+
+## Security limitations
+
+This repository deliberately favors a quick, repeatable demo over production durability and isolation:
+
+- Generated web, database, and MCP credentials are shown in deployment output and stored in local Azure Developer CLI environment state.
+- All MCP callers share one static bearer key.
+- PostgreSQL and application files use ephemeral storage without backups.
+- Caddy stores certificates in an ephemeral group volume.
+- The container group has no per-user authorization, private network, audit pipeline, or rate limiting.
+
+A production design should use Microsoft Entra ID, managed identities, Azure Key Vault, durable managed database and storage services, private networking, managed ingress, backups, monitoring, and operation-level authorization. Avoid retaining deployment logs or sharing a screen while the generated credentials are visible.
