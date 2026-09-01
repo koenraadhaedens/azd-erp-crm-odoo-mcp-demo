@@ -1,6 +1,6 @@
-name: azd-erp-crm-odoo-mcp-demo
+name: tdd-erp-crm-odoo-mcp-demo
 metadata:
-  template: azd-erp-crm-odoo-mcp-demo@0.1.0
+  template: tdd-erp-crm-odoo-mcp-demo@0.1.0
 
 infra:
   provider: bicep
