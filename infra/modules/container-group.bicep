@@ -93,9 +93,11 @@ printf "env.ref('base.user_admin').write({'login': '$ODOO_ADMIN_LOGIN', 'passwor
 touch /bootstrap/ready
 echo "Odoo demo database is initialized"
 '''
-var bootstrapScript = replace(bootstrapScriptTemplate, '__REALISTIC_DEMO_SEED__', realisticDemoSeed)
+// CRLF line endings break bash's backslash-newline continuation, so strip any '\r'
+// that editors/git may have introduced into these embedded multi-line scripts.
+var bootstrapScript = replace(replace(bootstrapScriptTemplate, '__REALISTIC_DEMO_SEED__', realisticDemoSeed), '\r\n', '\n')
 
-var odooStartScript = '''
+var odooStartScriptTemplate = '''
 set -eu
 echo "Waiting for the Odoo bootstrap container..."
 while [ ! -f /bootstrap/ready ]; do sleep 2; done
@@ -112,6 +114,9 @@ exec odoo \
   --db-filter="^$POSTGRES_DB$" \
   --proxy-mode
 '''
+// CRLF line endings break bash's backslash-newline continuation, so strip any '\r'
+// that editors/git may have introduced into this embedded multi-line script.
+var odooStartScript = replace(odooStartScriptTemplate, '\r\n', '\n')
 
 resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2025-09-01' = {
   name: 'aci-${environmentName}'
