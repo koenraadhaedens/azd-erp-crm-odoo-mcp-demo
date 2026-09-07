@@ -47,6 +47,14 @@ Expected response:
 
 The health endpoint doesn't require authentication. Calls to `/mcp` require the generated bearer key.
 
+### Expected `odoo-bootstrap` container state
+
+> **Important:** It is normal and required for the `odoo-bootstrap` container to be **Terminated** after initialization. A successful deployment leaves this container **Terminated with exit code 0**; it is not supposed to remain running.
+
+The `odoo-bootstrap` container is a one-time initialization job, not a long-running service. It installs the Odoo applications, seeds the realistic demo data, writes the readiness marker, and then intentionally exits. Its normal completed state in the Azure portal is **Terminated**, with **exit code 0** and normally **restart count 0**. Do not restart it merely because it is shown as terminated.
+
+After bootstrap completes, `postgres`, `odoo`, `mcp-server`, and `caddy` should remain **Running**. Treat the bootstrap as failed only when it terminates with a nonzero exit code, has failure-related restarts, or the deployment hook reports an initialization failure. In that case, inspect the `odoo-bootstrap` logs.
+
 ### Preview the CRM pipeline in Odoo
 
 Before building the agent, briefly show the same CRM data in the Odoo web interface:
@@ -512,6 +520,10 @@ Create a CRM lead for Azure Peak Bikes called Executive Floor Expansion with exp
 Show that the agent pauses for confirmation. Approve the action, and then open Odoo to display the newly created lead.
 
 ## Troubleshooting
+
+### `odoo-bootstrap` is shown as `Terminated`
+
+This is expected after a successful deployment. `odoo-bootstrap` is designed to run once and exit; **Terminated with exit code 0** means initialization completed successfully. The long-running containers should remain **Running**. Investigate only if the exit code is nonzero, the restart count indicates failures, the health endpoint is unavailable, or the deployment hook reported that initialization failed.
 
 ### `401 Unauthorized`
 
