@@ -45,7 +45,7 @@ Expected response:
 }
 ```
 
-The health endpoint doesn't require authentication. Calls to `/mcp` require the generated bearer key.
+The health endpoint doesn't require authentication. Calls to `/mcp/` require the generated bearer key.
 
 ### Expected `odoo-bootstrap` container state
 
@@ -189,10 +189,10 @@ Provides live access to the Contoso Odoo ERP and CRM demo. Searches customers, c
 Paste the exact `MCP URL` displayed after deployment:
 
 ```text
-https://<generated-name>.<region>.azurecontainer.io/mcp
+https://<generated-name>.<region>.azurecontainer.io/mcp/
 ```
 
-Use `/mcp`, not `/health` and not the normal Odoo web URL.
+Use `/mcp/`, not `/health` and not the normal Odoo web URL.
 
 ## 6. Configure authentication
 
@@ -543,7 +543,7 @@ Check that:
 
 Check that:
 
-- The server URL ends in `/mcp`.
+- The server URL ends in `/mcp/`. the training "/" is very important or it will fail
 - Generative orchestration is enabled.
 - The Odoo bootstrap completed successfully.
 - The HTTPS certificate is valid.
