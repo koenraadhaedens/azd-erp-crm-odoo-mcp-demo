@@ -2,6 +2,7 @@
 .azure/*
 !.azure/plan.copilotmd
 !.azure/summary.copilotmd
+.env
 
 # Local tooling
 .DS_Store
