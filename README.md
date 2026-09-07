@@ -59,6 +59,8 @@ These are generated demo credentials. Do not publish them or reuse them elsewher
 
 Continue with the [Copilot Studio demo guide](demo-guide.md) to preview the Odoo CRM pipeline and connect the MCP server to an agent.
 
+For a separate identity-gateway demonstration that leaves this deployment unchanged, use the [optional API Management and Microsoft Entra ID demo guide](apim-entra-demo-guide.md). It connects an existing API Management service to the current API-key-protected MCP endpoint and presents an Entra-protected URL to clients.
+
 ### Remove the demo
 
 Return to the same Cloud Shell directory and run:
