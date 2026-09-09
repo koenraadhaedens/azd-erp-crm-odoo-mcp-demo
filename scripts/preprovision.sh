@@ -5,6 +5,10 @@ get_azd_value() {
   azd env get-value "$1" 2>/dev/null || true
 }
 
+[ -n "$(get_azd_value APIM_PUBLISHER_NAME)" ] || azd env set APIM_PUBLISHER_NAME 'odoodemoapisrvs'
+[ -n "$(get_azd_value APIM_PUBLISHER_EMAIL)" ] || azd env set APIM_PUBLISHER_EMAIL 'no@no.com'
+sh "$(dirname "$0")/configure-entra-app.sh"
+
 ACR_NAME_VALUE="$(get_azd_value ACR_NAME)"
 ACR_NAME_VALUE="${ACR_NAME_VALUE:-acrdefcontainer}"
 azd env set ACR_NAME "$ACR_NAME_VALUE"
@@ -20,7 +24,7 @@ if [ "$BUILD_IMAGES_VALUE" = "true" ]; then
     IMAGE_TAG_VALUE="$(git rev-parse --short=12 HEAD 2>/dev/null || date -u +%Y%m%d%H%M%S)"
     azd env set IMAGE_TAG "$IMAGE_TAG_VALUE"
   fi
-  IMAGE_BUILD_KEY="${IMAGE_TAG_VALUE}-realistic-demo-v2"
+  IMAGE_BUILD_KEY="${IMAGE_TAG_VALUE}-realistic-demo-v3"
   LAST_BUILT_TAG_VALUE="$(get_azd_value LAST_BUILT_IMAGE_TAG)"
   if [ "$LAST_BUILT_TAG_VALUE" != "$IMAGE_BUILD_KEY" ]; then
     sh "$(dirname "$0")/build-images.sh" "$ACR_NAME_VALUE" "$IMAGE_TAG_VALUE"

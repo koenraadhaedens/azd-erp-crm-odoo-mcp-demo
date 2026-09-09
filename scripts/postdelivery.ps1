@@ -126,6 +126,8 @@ Write-Host ''
 Write-Host 'Endpoints' -ForegroundColor Green
 Write-Host "  Odoo URL:        $(Get-AzdEnvironmentValue 'ODOO_URL')"
 Write-Host "  MCP URL:         $(Get-AzdEnvironmentValue 'MCP_URL')"
+Write-Host "  Entra MCP URL:   $(Get-AzdEnvironmentValue 'APIM_MCP_URL')"
+Write-Host "  OAuth metadata:  $(Get-AzdEnvironmentValue 'APIM_PROTECTED_RESOURCE_URL')"
 Write-Host "  Azure portal:    $(Get-AzdEnvironmentValue 'AZURE_PORTAL_URL')"
 
 Write-Host ''
@@ -143,11 +145,13 @@ Write-Host "  Password:        $(Get-AzdEnvironmentValue 'POSTGRES_PASSWORD')"
 Write-Host ''
 Write-Host 'MCP authentication' -ForegroundColor Green
 Write-Host "  API key:         $(Get-AzdEnvironmentValue 'MCP_API_KEY')"
+Write-Host "  Entra client ID: $(Get-AzdEnvironmentValue 'ENTRA_APP_CLIENT_ID')"
 
 Write-Host ''
 Write-Host 'Azure resources' -ForegroundColor Green
 Write-Host "  Resource group:  $(Get-AzdEnvironmentValue 'AZURE_RESOURCE_GROUP')"
 Write-Host "  Container group: $(Get-AzdEnvironmentValue 'AZURE_CONTAINER_GROUP_NAME')"
+Write-Host "  API Management:  $(Get-AzdEnvironmentValue 'APIM_SERVICE_NAME')"
 
 Write-Host ''
 Write-Host 'Odoo initialization is complete. Initial HTTPS certificate issuance may still take a short time.'

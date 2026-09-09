@@ -6,6 +6,14 @@ function Get-AzdValue([string]$Name) {
     return ''
 }
 
+if ([string]::IsNullOrWhiteSpace((Get-AzdValue 'APIM_PUBLISHER_NAME'))) {
+    azd env set APIM_PUBLISHER_NAME 'odoodemoapisrvs'
+}
+if ([string]::IsNullOrWhiteSpace((Get-AzdValue 'APIM_PUBLISHER_EMAIL'))) {
+    azd env set APIM_PUBLISHER_EMAIL 'no@no.com'
+}
+& "$PSScriptRoot/configure-entra-app.ps1"
+
 $registryName = Get-AzdValue 'ACR_NAME'
 if ([string]::IsNullOrWhiteSpace($registryName)) {
     $registryName = 'acrdefcontainer'
@@ -28,7 +36,7 @@ if ($buildImages -ieq 'true') {
         }
         azd env set IMAGE_TAG $imageTag
     }
-    $imageBuildKey = "${imageTag}-realistic-demo-v2"
+    $imageBuildKey = "${imageTag}-realistic-demo-v3"
     $lastBuiltTag = Get-AzdValue 'LAST_BUILT_IMAGE_TAG'
     if ($lastBuiltTag -ne $imageBuildKey) {
         & "$PSScriptRoot/build-images.ps1" -Registry $registryName -Tag $imageTag

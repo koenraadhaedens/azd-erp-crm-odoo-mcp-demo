@@ -1,6 +1,6 @@
 # Disposable Odoo ERP/CRM MCP demo on Azure
 
-This project creates a ready-to-use Odoo business demo in Azure. It includes a website with realistic sample customers, products, sales orders, and CRM opportunities, plus an MCP connection that lets an AI agent work with that data. Everything runs in one temporary Azure environment, and the deployment prints the links and sign-in details when it is ready.
+This project creates a ready-to-use Odoo business demo in Azure. It includes a website with realistic sample customers, products, sales orders, and CRM opportunities, plus direct and Microsoft Entra-protected MCP connections that let an AI agent work with that data. The deployment prints the links and sign-in details when it is ready.
 
 The environment is intended for workshops and demonstrations. Its data and generated credentials are disposable and must not be used for production.
 
@@ -44,7 +44,7 @@ When prompted:
 2. Select the Azure subscription to use.
 3. Select an Azure region that supports Azure Container Instances.
 
-Deployment normally takes several minutes. The final step waits for Odoo to install its applications and load the realistic demo data; this can take up to 20 minutes.
+Deployment creates a Developer-tier API Management service and can take 30 to 60 minutes. The final step also waits for Odoo to install its applications and load the realistic demo data; this can take up to 20 minutes.
 
 ### 5. Save the delivery information
 
@@ -53,13 +53,14 @@ When deployment finishes, the output displays:
 - The Odoo website URL.
 - The Odoo web login and password.
 - The MCP URL and API key.
+- The Entra-protected API Management MCP URL and Entra client ID.
 - Links to the deployed Azure resources.
 
 These are generated demo credentials. Do not publish them or reuse them elsewhere. If the initial HTTPS certificate is still being issued, wait briefly and reload the Odoo URL.
 
 Continue with the [Copilot Studio demo guide](demo-guide.md) to preview the Odoo CRM pipeline and connect the MCP server to an agent.
 
-For a separate identity-gateway demonstration that leaves this deployment unchanged, use the [optional API Management and Microsoft Entra ID demo guide](apim-entra-demo-guide.md). It connects an existing API Management service to the current API-key-protected MCP endpoint and presents an Entra-protected URL to clients.
+Use the [API Management and Microsoft Entra ID demo guide](apim-entra-demo-guide.md) to connect VS Code to the Entra-protected MCP URL created by this deployment.
 
 ### Remove the demo
 
@@ -73,33 +74,36 @@ Review the resources listed by the command and confirm their deletion. Removing 
 
 ## Technical architecture
 
-The Bicep templates deploy one Linux Azure Container Instances container group named `aci-<environment-name>` into a resource group named `rg-<environment-name>`. The group contains five containers built from four images.
+The Bicep templates deploy a Developer-tier API Management service and one Linux Azure Container Instances container group named `aci-<environment-name>` into a resource group named `rg-<environment-name>`. The group contains five containers built from four images.
 
 ```mermaid
 flowchart LR
-	user[Browser or MCP client]
+    user[Browser or MCP client]
 
-	subgraph azure[Azure resource group]
-		subgraph aci[Azure Container Instances container group]
-			caddy[Caddy<br/>public ports 80 and 443]
-			odoo[Odoo 18<br/>internal port 8069]
-			mcp[Odoo MCP server<br/>internal port 8000]
-			postgres[(PostgreSQL 16<br/>internal port 5432)]
-			bootstrap[Odoo bootstrap<br/>runs initialization]
+    subgraph azure[Azure resource group]
+        apim[API Management<br/>Entra-protected MCP gateway]
+        subgraph aci[Azure Container Instances container group]
+            caddy[Caddy<br/>public ports 80 and 443]
+            odoo[Odoo 18<br/>internal port 8069]
+            mcp[Odoo MCP server<br/>internal port 8000]
+            postgres[(PostgreSQL 16<br/>internal port 5432)]
+            bootstrap[Odoo bootstrap<br/>runs initialization]
 
-			bootstrap -->|creates database and demo data| postgres
-			bootstrap -->|readiness marker and Odoo files| state[(bootstrap-state<br/>ephemeral volume)]
-			state --> odoo
-			odoo -->|SQL| postgres
-			mcp -->|Odoo JSON-RPC| odoo
-			caddy -->|all other paths| odoo
-			caddy -->|/mcp and /mcp/*| mcp
-			postgres --> pgdata[(postgres-data<br/>ephemeral volume)]
-			caddy --> tls[(caddy data/config<br/>ephemeral volumes)]
-		end
-	end
+            bootstrap -->|creates database and demo data| postgres
+            bootstrap -->|readiness marker and Odoo files| state[(bootstrap-state<br/>ephemeral volume)]
+            state --> odoo
+            odoo -->|SQL| postgres
+            mcp -->|Odoo JSON-RPC| odoo
+            caddy -->|all other paths| odoo
+            caddy -->|/mcp and /mcp/*| mcp
+            postgres --> pgdata[(postgres-data<br/>ephemeral volume)]
+            caddy --> tls[(caddy data/config<br/>ephemeral volumes)]
+        end
+    end
 
-	user -->|HTTPS| caddy
+    user -->|Direct HTTPS + API key| caddy
+    user -->|HTTPS + Entra token| apim
+    apim -->|Backend API key| caddy
 ```
 
 Only Caddy exposes public ports. PostgreSQL, Odoo, and the MCP server communicate through the container group's shared loopback network and have no direct public ACI port mappings.
@@ -134,8 +138,9 @@ The deployment uses one generated ACI hostname:
 - `https://<generated-name>.<region>.azurecontainer.io/web` opens the Odoo backend login.
 - `https://<generated-name>.<region>.azurecontainer.io/mcp` exposes the Streamable HTTP MCP endpoint.
 - `https://<generated-name>.<region>.azurecontainer.io/health` exposes the public MCP health check.
+- `https://<apim-name>.azure-api.net/odoo-mcp/mcp` exposes the Entra-protected MCP endpoint.
 
-Caddy routes `/mcp` and `/mcp/*` to the MCP server without removing the path. All other requests go to Odoo. Port 80 supports certificate validation and redirects normal requests to HTTPS.
+Caddy routes `/mcp`, `/mcp/*`, and `/health` to the MCP server without removing the path. All other requests go to Odoo. Port 80 supports certificate validation and redirects normal requests to HTTPS.
 
 MCP clients must send the generated key as a bearer token:
 

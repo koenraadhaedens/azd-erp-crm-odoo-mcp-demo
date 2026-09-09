@@ -20,6 +20,18 @@
     "caddyImage": {
       "value": "${CADDY_IMAGE}"
     },
+    "apimPublisherName": {
+      "value": "${APIM_PUBLISHER_NAME}"
+    },
+    "apimPublisherEmail": {
+      "value": "${APIM_PUBLISHER_EMAIL}"
+    },
+    "entraTenantId": {
+      "value": "${ENTRA_TENANT_ID}"
+    },
+    "entraAppClientId": {
+      "value": "${ENTRA_APP_CLIENT_ID}"
+    },
     "postgresPassword": {
       "value": "${POSTGRES_PASSWORD}"
     },

@@ -131,6 +131,8 @@ printf 'WARNING: The values below are demo credentials. Do not reuse them.\n'
 printf '\nEndpoints\n'
 printf '  Odoo URL:        %s\n' "$(get_azd_value ODOO_URL)"
 printf '  MCP URL:         %s\n' "$(get_azd_value MCP_URL)"
+printf '  Entra MCP URL:   %s\n' "$(get_azd_value APIM_MCP_URL)"
+printf '  OAuth metadata:  %s\n' "$(get_azd_value APIM_PROTECTED_RESOURCE_URL)"
 printf '  Azure portal:    %s\n' "$(get_azd_value AZURE_PORTAL_URL)"
 
 printf '\nOdoo credentials\n'
@@ -145,9 +147,11 @@ printf '  Password:        %s\n' "$(get_azd_value POSTGRES_PASSWORD)"
 
 printf '\nMCP authentication\n'
 printf '  API key:         %s\n' "$(get_azd_value MCP_API_KEY)"
+printf '  Entra client ID: %s\n' "$(get_azd_value ENTRA_APP_CLIENT_ID)"
 
 printf '\nAzure resources\n'
 printf '  Resource group:  %s\n' "$(get_azd_value AZURE_RESOURCE_GROUP)"
 printf '  Container group: %s\n' "$(get_azd_value AZURE_CONTAINER_GROUP_NAME)"
+printf '  API Management:  %s\n' "$(get_azd_value APIM_SERVICE_NAME)"
 
 printf '\nOdoo initialization is complete. Initial HTTPS certificate issuance may still take a short time.\n'

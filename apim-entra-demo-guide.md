@@ -1,6 +1,6 @@
-# Additional demo: Protect the Odoo MCP server with API Management and Microsoft Entra ID
+# Demo: Use the Entra-protected Odoo MCP server
 
-This optional guide adds an identity-aware gateway demonstration without changing or redeploying the existing Odoo demo. It uses an **existing Azure API Management instance** to expose the current MCP endpoint as a passthrough MCP server.
+The repository deployment creates an Azure API Management instance, an environment-specific Microsoft Entra application, and an identity-aware passthrough to the Odoo MCP server. This guide connects VS Code to that deployed endpoint.
 
 The two paths continue to work side by side:
 
@@ -24,9 +24,8 @@ You need:
 
 - A completed deployment of this repository.
 - The `MCP URL` and `API key` printed by the existing deployment.
-- An existing API Management instance in a tier that supports MCP servers: Developer, Basic, Standard, Premium, Basic v2, Standard v2, or Premium v2.
-- Permission to add APIs, MCP servers, policies, and named values to that API Management instance.
-- Permission to create a Microsoft Entra app registration.
+- Permission to create a Developer-tier API Management instance.
+- Permission to create a Microsoft Entra app registration, or an existing app client ID supplied as `ENTRA_APP_CLIENT_ID` before deployment.
 - A recent version of Visual Studio Code with GitHub Copilot and remote MCP OAuth support.
 
 Record these values before starting:
@@ -34,7 +33,8 @@ Record these values before starting:
 | Name | Example |
 | --- | --- |
 | Tenant ID | `00000000-0000-0000-0000-000000000000` |
-| API Management gateway URL | `https://contoso-apim.azure-api.net` |
+| API Management gateway URL | The `APIM_GATEWAY_URL` deployment output |
+| Entra application client ID | The `ENTRA_APP_CLIENT_ID` azd environment value |
 | Existing MCP URL | `https://<generated-name>.<region>.azurecontainer.io/mcp/` |
 | Existing MCP API key | `Mcp-<generated-value>!` |
 
@@ -70,9 +70,23 @@ Expected response:
 }
 ```
 
-Don't continue until the existing endpoint is healthy. No API Management or application files in this repository need to change.
+Don't continue until the existing endpoint is healthy. The same `azd up` deployment provisions the API Management service and its policies.
 
-## 3. Register the protected API in Microsoft Entra ID
+## 3. Automatic provisioning
+
+The pre-provision hook creates or reuses the environment-specific Entra app, configures its `mcp.access` scope and public-client redirect URI, and saves its client ID in the azd environment. Bicep then deploys API Management, the MCP passthrough, backend authorization named value, validation policy, and protected-resource metadata endpoint.
+
+Retrieve the values at any time:
+
+```bash
+azd env get-value APIM_MCP_URL
+azd env get-value APIM_PROTECTED_RESOURCE_URL
+azd env get-value ENTRA_APP_CLIENT_ID
+```
+
+Skip to **Add the API Management endpoint manually in VS Code**. The following sections are retained only as a manual configuration reference.
+
+## 4. Manual fallback: Register the protected API in Microsoft Entra ID
 
 1. Open the [Microsoft Entra admin center](https://entra.microsoft.com/).
 2. Go to **Identity** > **Applications** > **App registrations**.
@@ -112,7 +126,7 @@ Don't continue until the existing endpoint is healthy. No API Management or appl
 
 This single app registration represents the protected API and supplies the public client ID used by VS Code for this demo. It doesn't need a client secret.
 
-## 4. Store the backend bearer key in API Management
+## 5. Manual fallback: Store the backend bearer key in API Management
 
 The MCP client must never receive the static backend key. Store it as a secret named value that only the API Management policy uses.
 
@@ -134,7 +148,7 @@ Include `Bearer` and one space in the value. Don't enter only the generated key.
 
 > For a production design, use an Azure Key Vault-backed named value and rotate the backend credential. A secret named value is sufficient for this disposable demo.
 
-## 5. Add the existing MCP server to API Management
+## 6. Manual fallback: Add the existing MCP server to API Management
 
 1. In the API Management instance, go to **APIs** > **MCP servers**.
 2. Select **+ Create MCP server**.
@@ -153,7 +167,7 @@ The API Management server URL should be:
 https://<apim-name>.azure-api.net/odoo-mcp/mcp
 ```
 
-## 6. Apply Entra validation and backend-key injection
+## 7. Manual fallback: Apply Entra validation and backend-key injection
 
 Open the newly created MCP server, select **Policies**, and replace the policy with the following XML. Replace all four placeholders before saving:
 
@@ -215,7 +229,7 @@ Policy order matters: API Management first validates the caller's Entra token an
 
 Don't log or read `context.Response.Body` in an MCP policy. Response buffering can interfere with Streamable HTTP.
 
-## 7. Add the OAuth protected-resource metadata endpoint
+## 8. Manual fallback: Add the OAuth protected-resource metadata endpoint
 
 VS Code needs Protected Resource Metadata to discover the Microsoft Entra authorization server and requested scope.
 
@@ -293,7 +307,7 @@ Browse to the metadata URL and confirm that it returns JSON. Verify that:
 - `authorization_servers` contains the correct tenant.
 - `scopes_supported` contains the complete exposed scope.
 
-## 8. Add the API Management endpoint manually in VS Code
+## 9. Add the API Management endpoint manually in VS Code
 
 1. Open the Command Palette in VS Code.
 2. Run **MCP: Add Server**.
@@ -322,14 +336,14 @@ Browse to the metadata URL and confirm that it returns JSON. Verify that:
 }
 ```
 
-8. Start or restart the server.
-9. Approve the server trust prompt.
-10. Complete the Microsoft sign-in and consent flow in the browser.
-11. In Copilot Chat, open **Configure Tools** and enable the Odoo tools from `odooErpCrmViaApim`.
+1. Start or restart the server.
+2. Approve the server trust prompt.
+3. Complete the Microsoft sign-in and consent flow in the browser.
+4. In Copilot Chat, open **Configure Tools** and enable the Odoo tools from `odooErpCrmViaApim`.
 
 Don't add `MCP_API_KEY`, `Authorization`, or an API Management subscription key to this client configuration. VS Code obtains the Entra token; API Management supplies the backend key.
 
-## 9. Test the additional path
+## 10. Test the additional path
 
 Use these prompts in a new Copilot Chat agent session:
 
@@ -395,17 +409,12 @@ Confirm that the policy's `set-header` runs after `validate-azure-ad-token` and 
 - Don't access the response body from a policy.
 - If global API Management diagnostics are enabled, set frontend response payload logging to zero bytes for MCP traffic.
 
-## Remove only the additional demo
+## Remove the demo
 
-To preserve the original Odoo deployment and the existing API Management service, delete only:
+Run `azd down --purge` to remove the resource group, including API Management and the Odoo container group. Microsoft Entra applications are tenant objects rather than resource-group resources, so also delete:
 
-1. The `odoo-mcp` MCP server/API from API Management.
-2. The `odoo-mcp-oauth-metadata` API.
-3. The `odoo-mcp-backend-authorization` named value.
-4. The `Odoo MCP APIM demo` Entra app registration.
-5. The `odooErpCrmViaApim` entry from the VS Code MCP configuration.
-
-Don't run `azd down` unless the original disposable Odoo environment should also be removed.
+1. The `Odoo MCP APIM demo - <environment-name>` Entra app registration if the deployment created it.
+2. The `odooErpCrmViaApim` entry from the VS Code MCP configuration.
 
 ## Security notes
 
