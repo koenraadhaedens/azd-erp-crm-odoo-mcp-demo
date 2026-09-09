@@ -73,7 +73,7 @@ resource metadataApi 'Microsoft.ApiManagement/service/apis@2024-05-01' = {
   properties: {
     apiType: 'http'
     displayName: 'Odoo MCP OAuth metadata'
-    path: '.well-known/oauth-protected-resource/odoo-mcp/mcp'
+    path: ''
     protocols: [
       'https'
     ]
@@ -87,7 +87,7 @@ resource metadataOperation 'Microsoft.ApiManagement/service/apis/operations@2024
   properties: {
     displayName: 'Get Odoo MCP protected resource metadata'
     method: 'GET'
-    urlTemplate: '/'
+    urlTemplate: '/.well-known/oauth-protected-resource/odoo-mcp/mcp'
     templateParameters: []
     responses: [
       {
