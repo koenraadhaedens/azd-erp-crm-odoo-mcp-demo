@@ -5,7 +5,7 @@
 {$PUBLIC_FQDN} {
 	encode zstd gzip
 
-	@mcp path /mcp /mcp/*
+	@mcp path /mcp /mcp/* /health
 	handle @mcp {
 		reverse_proxy 127.0.0.1:8000 {
 			flush_interval -1
