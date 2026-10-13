@@ -1,4 +1,4 @@
-# Disposable Odoo ERP/CRM MCP demo on Azure
+# Disposable Odoo ERP/CRM MCP demo
 
 This project creates a ready-to-use Odoo business demo in Azure. It includes a website with realistic sample customers, products, sales orders, and CRM opportunities, plus an MCP connection that lets an AI agent work with that data. Everything runs in one temporary Azure environment, and the deployment prints the links and sign-in details when it is ready.
 
